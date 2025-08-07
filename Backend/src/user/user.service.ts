@@ -5,6 +5,8 @@ import { UpdateUserDto } from './dto/update.user.dto';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { ResponseUserDto } from './dto/response.user.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UserService {
@@ -13,22 +15,27 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   // Get user by email
-  async getUserbyEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email: email } });
+  async getUserbyEmail(email: string): Promise<ResponseUserDto | null> {
+    const user = await this.prisma.user.findUnique({ where: { email: email } });
+    return user ? plainToInstance(ResponseUserDto, user) : null;
   }
 
   // Get user by id
-  async getUserbyId(userId: number) {
-    return this.prisma.user.findUnique({ where: { id: Number(userId) } });
+  async getUserbyId(userId: number): Promise<ResponseUserDto | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: Number(userId) },
+    });
+    return user ? plainToInstance(ResponseUserDto, user) : null;
   }
 
   // Create user with hashed password
-  async createUser(data: CreateUserDto) {
+  async createUser(data: CreateUserDto): Promise<ResponseUserDto> {
     try {
       const hashedPassword: string = await bcrypt.hash(data.password, 10);
-      return this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: { ...data, password: hashedPassword },
       });
+      return plainToInstance(ResponseUserDto, user);
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (error.code === 'P2002') {
@@ -39,7 +46,10 @@ export class UserService {
   }
 
   // Update user info
-  async updateUser(userId: number, data: UpdateUserDto) {
+  async updateUser(
+    userId: number,
+    data: UpdateUserDto,
+  ): Promise<ResponseUserDto> {
     try {
       // Fetch the existing user
       const existingUser = await this.prisma.user.findUnique({
@@ -70,21 +80,25 @@ export class UserService {
       }
       // Throw error if no changes detected
       if (Object.keys(updates).length === 0) {
-        throw new Error('No changes detected');
+        throw new BadRequestException('No changes detected');
       }
       // Update user in the database
-      return await this.prisma.user.update({
+      const user = await this.prisma.user.update({
         where: { id: Number(userId) },
         data: updates,
       });
+      return plainToInstance(ResponseUserDto, user);
     } catch (error) {
       // Handle errors
-      throw new Error(`Error while updating user: ${error}`);
+      throw new BadRequestException(`Error while updating user: ${error}`);
     }
   }
 
   // Delete user
-  async deleteUser(userId: number) {
-    return await this.prisma.user.delete({ where: { id: Number(userId) } });
+  async deleteUser(userId: number): Promise<ResponseUserDto> {
+    const user = await this.prisma.user.delete({
+      where: { id: Number(userId) },
+    });
+    return plainToInstance(ResponseUserDto, user);
   }
 }

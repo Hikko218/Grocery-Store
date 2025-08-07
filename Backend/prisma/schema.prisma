@@ -39,6 +39,9 @@ model Product {
   createdAt   DateTime @default(now())
   orderItems  OrderItem[]
   cartItems   CartItem[]
+  @@index([category])
+  @@index([name])
+  @@index([brand])
 }
 
 model Order {

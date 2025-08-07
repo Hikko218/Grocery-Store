@@ -30,11 +30,7 @@ describe('UsersService', () => {
 
   it('create, retrieve, delete, and update a user', async () => {
     // Create user
-    const user: {
-      email: string;
-      password: string;
-      id: number;
-    } = await service.createUser({
+    const user = await service.createUser({
       email: `test${Date.now()}@example.com`,
       password: 'secret',
     });
