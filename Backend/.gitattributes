@@ -1,0 +1,16 @@
+# Erzwinge LF im Repo (unabhängig von Windows/Mac)
+* text=auto eol=lf
+
+# Binärdateien niemals anfassen
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.ico binary
+
+# Lockfiles nicht normalisieren
+package-lock.json -text
+pnpm-lock.yaml -text
+yarn.lock -text
