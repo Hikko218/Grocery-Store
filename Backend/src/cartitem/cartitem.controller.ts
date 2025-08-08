@@ -18,26 +18,28 @@ import { CreateCartItemDto } from './dto/create.cartitem.dto';
 import { UpdateCartItemDto } from './dto/update.cartitem.dto';
 import { ResponseCartItemDto } from './dto/response.cartitem.dto';
 
+// Controller exposes REST endpoints for cart items with logging and errors
 @Controller('cartitem')
 export class CartItemController {
-  private readonly logger = new Logger('CartItemController');
-
+  // Inject application service
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly service: CartItemService) {}
 
+  // POST /cartitem -> create new cart item
   @Post()
   @HttpCode(201)
   async create(@Body() dto: CreateCartItemDto): Promise<ResponseCartItemDto> {
     try {
       const item = await this.service.create(dto);
-      this.logger.log('Successfully created cart item');
+      Logger.log('Successfully created cart item');
       return item;
     } catch (error) {
-      this.logger.error(`Error creating cart item: ${error}`);
+      Logger.error(`Error creating cart item: ${error}`);
       throw new BadRequestException('Cannot create cart item');
     }
   }
 
+  // GET /cartitem?cartId=123 -> list items, optionally filtered by cartId
   @Get()
   @HttpCode(200)
   async findAll(
@@ -46,14 +48,15 @@ export class CartItemController {
     try {
       const id = cartId ? parseInt(cartId, 10) : undefined;
       const items = await this.service.findAll(id);
-      this.logger.log('Successfully retrieved cart items');
+      Logger.log('Successfully retrieved cart items');
       return items;
     } catch (error) {
-      this.logger.error(`Error retrieving cart items: ${error}`);
+      Logger.error(`Error retrieving cart items: ${error}`);
       throw new NotFoundException('No cart items found');
     }
   }
 
+  // GET /cartitem/:id -> fetch single item
   @Get(':id')
   @HttpCode(200)
   async findOne(
@@ -62,14 +65,15 @@ export class CartItemController {
     try {
       const item = await this.service.findOne(id);
       if (!item) throw new NotFoundException('CartItem not found');
-      this.logger.log('Successfully retrieved cart item');
+      Logger.log('Successfully retrieved cart item');
       return item;
     } catch (error) {
-      this.logger.error(`Error retrieving cart item: ${error}`);
+      Logger.error(`Error retrieving cart item: ${error}`);
       throw new NotFoundException('CartItem not found');
     }
   }
 
+  // PUT /cartitem/:id -> update existing item
   @Put(':id')
   @HttpCode(200)
   async update(
@@ -78,14 +82,15 @@ export class CartItemController {
   ): Promise<ResponseCartItemDto> {
     try {
       const item = await this.service.update(id, dto);
-      this.logger.log('Successfully updated cart item');
+      Logger.log('Successfully updated cart item');
       return item;
     } catch (error) {
-      this.logger.error(`Error updating cart item: ${error}`);
+      Logger.error(`Error updating cart item: ${error}`);
       throw new BadRequestException('Cannot update cart item');
     }
   }
 
+  // DELETE /cartitem/:id -> remove item
   @Delete(':id')
   @HttpCode(200)
   async remove(
@@ -93,10 +98,10 @@ export class CartItemController {
   ): Promise<{ success: boolean }> {
     try {
       await this.service.remove(id);
-      this.logger.log('Cart item successfully deleted');
+      Logger.log('Cart item successfully deleted');
       return { success: true };
     } catch (error) {
-      this.logger.error(`Error deleting cart item: ${error}`);
+      Logger.error(`Error deleting cart item: ${error}`);
       throw new BadRequestException('Cannot delete cart item');
     }
   }

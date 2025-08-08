@@ -10,6 +10,7 @@ export class CartService {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly prisma: PrismaService) {}
 
+  // Create a cart for the user; throws BadRequestException if one already exists
   async createCart(dto: CreateCartDto): Promise<ResponseCartDto> {
     const cart = await this.prisma.cart.findUnique({
       where: { userId: Number(dto.userId) },
@@ -28,6 +29,7 @@ export class CartService {
     return plainToInstance(ResponseCartDto, newCart);
   }
 
+  // Find cart by id
   async findOneByUserId(userId: number): Promise<ResponseCartDto | null> {
     const cart = await this.prisma.cart.findUnique({
       where: { userId: Number(userId) },
@@ -36,6 +38,7 @@ export class CartService {
     return plainToInstance(ResponseCartDto, cart);
   }
 
+  // Update cart
   async updateCart(id: number, dto: UpdateCartDto): Promise<ResponseCartDto> {
     const cart = await this.prisma.cart.update({
       where: { id },
@@ -44,6 +47,7 @@ export class CartService {
     return plainToInstance(ResponseCartDto, cart);
   }
 
+  // Delete cart
   async deleteCart(id: number): Promise<{ success: boolean }> {
     await this.prisma.cart.delete({ where: { id } });
     return { success: true };
