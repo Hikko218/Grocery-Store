@@ -38,7 +38,15 @@ export class AuthService {
 
   // Login: set JWT cookie and send response
   async login(user: AuthUser, res: Response) {
-    const payload = { email: user.email, sub: user.id };
+    const dbUser = await this.prisma.user.findUnique({
+      where: { email: user.email },
+      select: { role: true },
+    });
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      role: dbUser?.role,
+    };
     const token = this.jwtService.sign(payload);
     res.cookie('token', token, {
       httpOnly: true,
@@ -47,6 +55,11 @@ export class AuthService {
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.send({ message: 'Logged in', userId: user.id, email: user.email });
+    res.send({
+      message: 'Logged in',
+      userId: user.id,
+      email: user.email,
+      role: dbUser?.role,
+    });
   }
 }

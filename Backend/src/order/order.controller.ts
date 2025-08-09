@@ -6,17 +6,21 @@ import {
   Delete,
   Param,
   Body,
+  Query,
+  ParseIntPipe,
   HttpCode,
   Logger,
   BadRequestException,
   NotFoundException,
-  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { CreateOrderDto } from './dto/create.order.dto';
 import { UpdateOrderDto } from './dto/update.order.dto';
 import { ResponseOrderDto } from './dto/response.order.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { AdminGuard } from '../auth/auth.guard';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('order')
 export class OrderController {
   // eslint-disable-next-line no-unused-vars
@@ -26,27 +30,26 @@ export class OrderController {
   @Get()
   @HttpCode(200)
   async getOrders(
-    @Query('userId') userId: number,
+    @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ResponseOrderDto[]> {
     try {
-      const orders = await this.orderService.getOrders(Number(userId));
-      if (!orders) {
-        throw new NotFoundException('No orders found');
-      }
+      const orders = await this.orderService.getOrders(userId);
       Logger.log('Successfully retrieved orders');
       return orders;
     } catch (error) {
       Logger.error(`Error retrieving orders: ${error}`);
-      throw new NotFoundException('No orders found');
+      throw new NotFoundException('No orders found for user');
     }
   }
 
   // POST /order
   @Post()
   @HttpCode(201)
-  async createOrder(@Body() data: CreateOrderDto): Promise<ResponseOrderDto> {
+  async createOrder(
+    @Body() body: { userId: number },
+  ): Promise<ResponseOrderDto> {
     try {
-      const order = await this.orderService.createOrder(data);
+      const order = await this.orderService.createOrder(body.userId);
       Logger.log('Successfully created order');
       return order;
     } catch (error) {
@@ -56,14 +59,15 @@ export class OrderController {
   }
 
   // PUT /order/:orderId
+  @UseGuards(AuthGuard('jwt'), AdminGuard)
   @Put(':orderId')
   @HttpCode(200)
   async updateOrder(
-    @Param('orderId') orderId: number,
+    @Param('orderId', ParseIntPipe) orderId: number,
     @Body() data: UpdateOrderDto,
   ): Promise<ResponseOrderDto> {
     try {
-      const order = await this.orderService.updateOrder(Number(orderId), data);
+      const order = await this.orderService.updateOrder(orderId, data);
       Logger.log('Successfully updated order');
       return order;
     } catch (error) {
@@ -73,17 +77,18 @@ export class OrderController {
   }
 
   // DELETE /order/:orderId
+  @UseGuards(AuthGuard('jwt'), AdminGuard)
   @Delete(':orderId')
   @HttpCode(200)
   async deleteOrder(
-    @Param('orderId') orderId: number,
+    @Param('orderId', ParseIntPipe) orderId: number,
   ): Promise<{ success: boolean }> {
     try {
-      await this.orderService.deleteOrder(Number(orderId));
+      await this.orderService.deleteOrder(orderId);
       Logger.log('Order successfully deleted');
       return { success: true };
     } catch (error) {
-      Logger.error(`Error deleting order ${orderId}: ${error}`);
+      Logger.error(`Error deleting order: ${error}`);
       throw new BadRequestException('Cannot delete order');
     }
   }

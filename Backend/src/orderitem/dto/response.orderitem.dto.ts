@@ -15,7 +15,7 @@ export class ResponseOrderItemDto {
   quantity: number;
 
   @Expose()
-  price: number;
+  price!: number | null;
 
   @Expose()
   createdAt: Date;

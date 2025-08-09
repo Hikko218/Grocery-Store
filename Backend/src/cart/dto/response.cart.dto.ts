@@ -10,4 +10,7 @@ export class ResponseCartDto {
 
   @Expose()
   createdAt: string;
+
+  @Expose()
+  totalPrice!: number;
 }

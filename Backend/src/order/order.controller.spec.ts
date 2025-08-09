@@ -6,30 +6,67 @@ import { PrismaService } from '../prisma/prisma.service';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { ResponseOrderDto } from './dto/response.order.dto';
+import { AppModule } from '../app.module';
+import * as bcrypt from 'bcrypt';
+import * as cookieParser from 'cookie-parser';
 
 describe('OrderController (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let userId: number;
   let orderId: number;
+  let adminCookie: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
       controllers: [OrderController],
       providers: [OrderService, PrismaService],
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(cookieParser());
     await app.init();
     prisma = app.get(PrismaService);
 
     // Clean up and create test user
     await prisma.order.deleteMany({});
     await prisma.user.deleteMany({});
+    await prisma.cart.deleteMany({});
+
+    const hashedPw = await bcrypt.hash('pw', 10);
+
+    // Create admin user
+    const admin = await prisma.user.create({
+      data: {
+        email: `admin${Date.now()}@test.de`,
+        password: hashedPw,
+        role: 'admin',
+      },
+    });
+
+    // Admin login to get cookie
+    const loginRes = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: admin.email, password: 'pw' });
+    adminCookie = loginRes.headers['set-cookie']?.[0];
+
+    expect(adminCookie).toBeDefined();
+
+    const userHashedPw = await bcrypt.hash('pw', 10);
+
     const user = await prisma.user.create({
-      data: { email: `order${Date.now()}@test.de`, password: 'pw' },
+      data: { email: `order${Date.now()}@test.de`, password: userHashedPw },
     });
     userId = user.id;
+
+    // Create a cart for the user with totalPrice 100
+    await prisma.cart.create({
+      data: {
+        userId,
+        totalPrice: 100,
+      },
+    });
   });
 
   afterAll(async () => {
@@ -40,7 +77,8 @@ describe('OrderController (e2e)', () => {
     // Create
     const createRes = await request(app.getHttpServer())
       .post('/order')
-      .send({ userId, totalPrice: 100 })
+      .set('Cookie', adminCookie)
+      .send({ userId })
       .expect(201);
     const createResBody = createRes.body as ResponseOrderDto;
     expect(createResBody).toBeDefined();
@@ -51,6 +89,7 @@ describe('OrderController (e2e)', () => {
     // Get
     const getRes = await request(app.getHttpServer())
       .get(`/order?userId=${userId}`)
+      .set('Cookie', adminCookie)
       .expect(200);
     const getResBody = getRes.body as ResponseOrderDto[];
     expect(Array.isArray(getResBody)).toBe(true);
@@ -60,6 +99,7 @@ describe('OrderController (e2e)', () => {
     // Update
     const updateRes = await request(app.getHttpServer())
       .put(`/order/${orderId}`)
+      .set('Cookie', adminCookie)
       .send({ totalPrice: 200 })
       .expect(200);
     const updateResBody = updateRes.body as ResponseOrderDto;
@@ -68,6 +108,7 @@ describe('OrderController (e2e)', () => {
     // Delete
     const deleteRes = await request(app.getHttpServer())
       .delete(`/order/${orderId}`)
+      .set('Cookie', adminCookie)
       .expect(200);
     const deleteResBody = deleteRes.body as { success: boolean };
     expect(deleteResBody.success).toBe(true);
@@ -75,6 +116,7 @@ describe('OrderController (e2e)', () => {
     // Check if deleted
     const afterDeleteRes = await request(app.getHttpServer())
       .get(`/order?userId=${userId}`)
+      .set('Cookie', adminCookie)
       .expect(200);
     const afterDeleteResBody = afterDeleteRes.body as ResponseOrderDto[];
     expect(afterDeleteResBody.find((o) => o.id === orderId)).toBeUndefined();

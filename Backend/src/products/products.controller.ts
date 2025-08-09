@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { Logger } from '@nestjs/common';
@@ -15,6 +16,8 @@ import { CreateProductDto } from './dto/create.product.dto';
 import { UpdateProductDto } from './dto/update.product.dto';
 import { HttpCode } from '@nestjs/common';
 import { ResponseProductDto } from './dto/response.product.dto';
+import { AdminGuard } from '../auth/auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('products')
 export class ProductsController {
@@ -42,6 +45,7 @@ export class ProductsController {
   }
 
   // POST /products
+  @UseGuards(AuthGuard('jwt'), AdminGuard)
   @Post()
   @HttpCode(201)
   async createProduct(
@@ -58,6 +62,7 @@ export class ProductsController {
   }
 
   // PUT /products/:productId
+  @UseGuards(AuthGuard('jwt'), AdminGuard)
   @Put(':productId')
   @HttpCode(200)
   async updateProduct(
@@ -75,6 +80,7 @@ export class ProductsController {
   }
 
   // DELETE /products/:productId
+  @UseGuards(AuthGuard('jwt'), AdminGuard)
   @Delete(':productId')
   @HttpCode(200)
   async deleteProduct(

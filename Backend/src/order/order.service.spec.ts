@@ -23,14 +23,19 @@ describe('OrderService', () => {
       data: { email: `order${Date.now()}@test.de`, password: 'pw' },
     });
     userId = user.id;
+
+    // Create a cart for the user with totalPrice 100
+    await prisma.cart.create({
+      data: {
+        userId,
+        totalPrice: 100,
+      },
+    });
   });
 
   it('should create, get, update, and delete an order', async () => {
     // Create
-    const order = await service.createOrder({
-      userId,
-      totalPrice: 100,
-    });
+    const order = await service.createOrder(userId);
     orderId = order.id;
     expect(order).toBeDefined();
     expect(order.userId).toBe(userId);
@@ -47,8 +52,7 @@ describe('OrderService', () => {
     expect(updated.totalPrice).toBe(200);
 
     // Delete
-    const deleted = await service.deleteOrder(orderId);
-    expect(deleted.id).toBe(orderId);
+    await service.deleteOrder(orderId);
     // Check if deleted
     const afterDelete = await service.getOrders(userId);
     expect(afterDelete.find((o) => o.id === orderId)).toBeUndefined();

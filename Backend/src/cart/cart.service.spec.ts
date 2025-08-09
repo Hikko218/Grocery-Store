@@ -13,18 +13,21 @@ describe('CartService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [CartService, PrismaService],
     }).compile();
+
     service = module.get<CartService>(CartService);
     prisma = module.get<PrismaService>(PrismaService);
 
     // Clean DB and create test user and cart
     await prisma.cart.deleteMany({});
     await prisma.user.deleteMany({});
+
     const user = await prisma.user.create({
       data: { email: `cart${Date.now()}@test.de`, password: 'pw' },
     });
     userId = user.id;
-    const cart = await prisma.cart.create({ data: { userId } });
-    cartId = cart.id;
+
+    const createdCart = await service.createCart({ userId });
+    cartId = createdCart.id;
   });
 
   it('should be defined', () => {
@@ -35,17 +38,17 @@ describe('CartService', () => {
     // Get cart by userId
     const cartByUser = await service.findOneByUserId(userId);
     expect(cartByUser).toBeDefined();
-    if (!cartByUser) throw new Error('Cart should exist');
-    expect(cartByUser.userId).toBe(userId);
+    expect(cartByUser && cartByUser.userId).toBe(userId);
 
-    // Update
-    const updateDto: UpdateCartDto = { userId };
+    // Update totalPrice
+    const updateDto: UpdateCartDto = { totalPrice: 42.5 };
     const updated = await service.updateCart(cartId, updateDto);
-    expect(updated.userId).toBe(userId);
+    expect(updated.totalPrice).toBe(42.5);
 
     // Delete
     const del = await service.deleteCart(cartId);
     expect(del.success).toBe(true);
+
     const afterDelete = await service.findOneByUserId(userId);
     expect(afterDelete).toBeNull();
   });

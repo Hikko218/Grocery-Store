@@ -10,13 +10,16 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { OrderItemService } from './orderitem.service';
 import { CreateOrderItemDto } from './dto/create.orderitem.dto';
 import { UpdateOrderItemDto } from './dto/update.orderitem.dto';
 import { ResponseOrderItemDto } from './dto/response.orderitem.dto';
+import { AuthGuard } from '@nestjs/passport';
 
-@Controller('orderitems')
+@UseGuards(AuthGuard('jwt'))
+@Controller('orderitem')
 export class OrderItemController {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly orderItemService: OrderItemService) {}

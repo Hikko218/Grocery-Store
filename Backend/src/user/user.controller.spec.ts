@@ -1,65 +1,116 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserService } from './user.service';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../app.module';
 import { PrismaService } from '../prisma/prisma.service';
-import { execSync } from 'child_process';
+import * as bcrypt from 'bcrypt';
+import * as cookieParser from 'cookie-parser';
 
-beforeAll(() => {
-  execSync(
-    'npx prisma migrate deploy --schema=prisma/test-migrations/schema.test.prisma',
-  );
-});
+describe('UserController (e2e)', () => {
+  let app: INestApplication;
+  let prisma: PrismaService;
+  let userId: number;
+  let userEmail: string;
+  let userCookie: string;
 
-describe('UsersService', () => {
-  let service: UserService;
-
-  // Unit tests for UserService (user management logic)
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [UserService, PrismaService],
+  beforeAll(async () => {
+    // Setup NestJS test application
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
     }).compile();
 
-    service = module.get<UserService>(UserService);
+    app = moduleFixture.createNestApplication();
+    app.use(cookieParser());
+    await app.init();
+    prisma = app.get(PrismaService);
 
-    // Clean database
-    await service['prisma'].user.deleteMany({});
+    // Clean up users before tests
+    await prisma.user.deleteMany({});
+
+    // Create test user
+    userEmail = `test${Date.now()}@example.com`;
+    const hashedPw = await bcrypt.hash('secret', 10);
+    const user = await prisma.user.create({
+      data: { email: userEmail, password: hashedPw },
+    });
+    userId = user.id;
+
+    // Login to get authentication cookie
+    const loginRes = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: userEmail, password: 'secret' });
+    userCookie = loginRes.headers['set-cookie']?.[0];
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  afterAll(async () => {
+    // Close NestJS app after tests
+    await app.close();
   });
 
-  it('create, retrieve, delete, and update a user', async () => {
-    // Create user
-    const user = await service.createUser({
-      email: `test${Date.now()}@example.com`,
-      password: 'secret',
-    });
-    expect(user).toBeDefined();
-    // Explicitly cast the expected object to ensure type safety
-    expect(user).toMatchObject({
-      email: expect.stringMatching(/test\d+@example\.com/) as unknown as string,
-    });
+  // Response type for user endpoints
+  interface UserResponse {
+    id: number;
+    email: string;
+    password?: string;
+    createdAt?: string;
+    role?: string;
+  }
 
-    // Retrieve user
-    const retrievedUser = await service.getUserbyEmail(user.email);
-    expect(retrievedUser).toBeDefined();
-    // Validate retrieved user
-    expect(retrievedUser).toMatchObject({
-      email: expect.stringMatching(/test\d+@example\.com/) as unknown as string,
-    });
+  // Response type for delete endpoint
+  interface DeleteResponse {
+    success: boolean;
+  }
 
-    // Update user
-    const updatedUser = await service.updateUser(user.id, {
-      email: 'test@test.de',
-    });
-    expect(updatedUser).toBeDefined();
-    expect(updatedUser).toMatchObject({ email: 'test@test.de' });
+  it('should create a user', async () => {
+    const email = `new${Date.now()}@example.com`;
+    // Test user creation endpoint
+    const res = await request(app.getHttpServer())
+      .post('/user')
+      .send({ email, password: 'pw' })
+      .expect(201);
+    const body = res.body as UserResponse;
+    expect(body.email).toBe(email);
+  });
 
-    // Delete user
-    await service.deleteUser(user.id);
+  it('should get user by email', async () => {
+    // Test get user by email endpoint
+    const res = await request(app.getHttpServer())
+      .get(`/user/${userEmail}`)
+      .set('Cookie', userCookie)
+      .expect(200);
+    const body = res.body as UserResponse;
+    expect(body.email).toBe(userEmail);
+  });
 
-    // Check if user deleted
-    const userAfterDelete = await service.getUserbyEmail(user.email);
-    expect(userAfterDelete).toBeNull();
+  it('should get user by id', async () => {
+    // Test get user by id endpoint
+    const res = await request(app.getHttpServer())
+      .get(`/user/id/${userId}`)
+      .set('Cookie', userCookie)
+      .expect(200);
+    const body = res.body as UserResponse;
+    expect(body.id).toBe(userId);
+  });
+
+  it('should update user', async () => {
+    // Test update user endpoint
+    const res = await request(app.getHttpServer())
+      .put(`/user/${userId}`)
+      .set('Cookie', userCookie)
+      .send({ email: 'updated@test.de' })
+      .expect(200);
+    const body = res.body as UserResponse;
+    expect(body.email).toBe('updated@test.de');
+  });
+
+  it('should delete user', async () => {
+    // Test delete user endpoint
+    const res = await request(app.getHttpServer())
+      .delete(`/user/${userId}`)
+      .set('Cookie', userCookie)
+      .expect(200);
+    const body = res.body as DeleteResponse;
+    expect(body.success).toBe(true);
   });
 });

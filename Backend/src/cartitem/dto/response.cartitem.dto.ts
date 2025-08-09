@@ -1,19 +1,13 @@
-import { Expose, Exclude } from 'class-transformer';
+import { Type } from 'class-transformer';
 
-@Exclude()
 export class ResponseCartItemDto {
-  @Expose()
-  id: number;
+  id!: number;
+  cartId!: number;
+  productId!: string;
 
-  @Expose()
-  cartId: number;
+  @Type(() => Number)
+  quantity!: number;
 
-  @Expose()
-  productId: string;
-
-  @Expose()
-  quantity: number;
-
-  @Expose()
-  createdAt: string;
+  @Type(() => Date)
+  createdAt!: Date;
 }

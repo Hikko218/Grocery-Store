@@ -1,13 +1,16 @@
-/*
-  Warnings:
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
 
-  - You are about to drop the column `updatedAt` on the `User` table. All the data in the column will be lost.
-  - A unique constraint covering the columns `[email]` on the table `User` will be added. If there are existing duplicate values, this will fail.
+-- CreateTable
+CREATE TABLE "public"."User" (
+    "id" SERIAL NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "role" TEXT NOT NULL DEFAULT 'user',
 
-*/
--- AlterTable
-ALTER TABLE "public"."User" DROP COLUMN "updatedAt",
-ADD COLUMN     "role" TEXT NOT NULL DEFAULT 'user';
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "public"."Product" (
@@ -19,10 +22,11 @@ CREATE TABLE "public"."Product" (
     "packaging" TEXT,
     "country" TEXT,
     "ingredients" TEXT,
-    "calories" DOUBLE PRECISION,
-    "price" DOUBLE PRECISION,
+    "calories" TEXT,
+    "price" DECIMAL(12,2),
     "imageUrl" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "productId" TEXT NOT NULL,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
 );
@@ -31,7 +35,7 @@ CREATE TABLE "public"."Product" (
 CREATE TABLE "public"."Order" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
-    "totalPrice" DOUBLE PRECISION NOT NULL,
+    "totalPrice" DECIMAL(12,2) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
@@ -41,9 +45,9 @@ CREATE TABLE "public"."Order" (
 CREATE TABLE "public"."OrderItem" (
     "id" SERIAL NOT NULL,
     "orderId" INTEGER NOT NULL,
-    "productId" INTEGER NOT NULL,
+    "productId" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 1,
-    "price" DOUBLE PRECISION NOT NULL,
+    "price" DECIMAL(12,2) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "OrderItem_pkey" PRIMARY KEY ("id")
@@ -54,6 +58,7 @@ CREATE TABLE "public"."Cart" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "totalPrice" DECIMAL(12,2) NOT NULL,
 
     CONSTRAINT "Cart_pkey" PRIMARY KEY ("id")
 );
@@ -62,7 +67,7 @@ CREATE TABLE "public"."Cart" (
 CREATE TABLE "public"."CartItem" (
     "id" SERIAL NOT NULL,
     "cartId" INTEGER NOT NULL,
-    "productId" INTEGER NOT NULL,
+    "productId" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -70,10 +75,22 @@ CREATE TABLE "public"."CartItem" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Cart_userId_key" ON "public"."Cart"("userId");
+CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
+CREATE UNIQUE INDEX "Product_productId_key" ON "public"."Product"("productId");
+
+-- CreateIndex
+CREATE INDEX "Product_category_idx" ON "public"."Product"("category");
+
+-- CreateIndex
+CREATE INDEX "Product_name_idx" ON "public"."Product"("name");
+
+-- CreateIndex
+CREATE INDEX "Product_brand_idx" ON "public"."Product"("brand");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Cart_userId_key" ON "public"."Cart"("userId");
 
 -- AddForeignKey
 ALTER TABLE "public"."Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -82,7 +99,7 @@ ALTER TABLE "public"."Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("us
 ALTER TABLE "public"."OrderItem" ADD CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "public"."Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."OrderItem" ADD CONSTRAINT "OrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."OrderItem" ADD CONSTRAINT "OrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."Product"("productId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Cart" ADD CONSTRAINT "Cart_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -91,4 +108,5 @@ ALTER TABLE "public"."Cart" ADD CONSTRAINT "Cart_userId_fkey" FOREIGN KEY ("user
 ALTER TABLE "public"."CartItem" ADD CONSTRAINT "CartItem_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "public"."Cart"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."CartItem" ADD CONSTRAINT "CartItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."CartItem" ADD CONSTRAINT "CartItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."Product"("productId") ON DELETE RESTRICT ON UPDATE CASCADE;
+

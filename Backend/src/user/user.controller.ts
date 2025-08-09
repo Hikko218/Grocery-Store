@@ -10,11 +10,13 @@ import {
   BadRequestException,
   NotFoundException,
   HttpCode,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create.user.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
 import { ResponseUserDto } from './dto/response.user.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('user')
 export class UserController {
@@ -42,6 +44,7 @@ export class UserController {
   }
 
   // GET /user/id/:userId: Get user by ID
+  @UseGuards(AuthGuard('jwt'))
   @Get('id/:userId')
   @HttpCode(200)
   async getUserById(@Param('userId') userId: number): Promise<ResponseUserDto> {
@@ -75,6 +78,7 @@ export class UserController {
   }
 
   // PUT /user/id Update user
+  @UseGuards(AuthGuard('jwt'))
   @Put(':id')
   @HttpCode(200)
   async updateUser(
@@ -92,6 +96,7 @@ export class UserController {
   }
 
   // Delete /user/id Delete user
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   @HttpCode(200)
   async deleteUser(@Param('id') userId: number): Promise<{ success: boolean }> {

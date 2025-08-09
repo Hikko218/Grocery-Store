@@ -27,18 +27,6 @@ interface AuthenticatedRequest extends Request {
 
 @Controller('auth')
 export class AuthController {
-  // POST /auth/validate: Validate user credentials
-  @Post('validate')
-  @HttpCode(200)
-  async validate(@Body() body: LoginBody, @Res() res: Response) {
-    const user = await this.authService.validateUser(body.email, body.password);
-    if (!user) {
-      return res
-        .status(401)
-        .send({ valid: false, message: 'Invalid credentials' });
-    }
-    return res.send({ valid: true });
-  }
   // Service injection
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly authService: AuthService) {}

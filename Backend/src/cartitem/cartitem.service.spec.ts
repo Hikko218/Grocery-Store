@@ -35,6 +35,7 @@ describe('CartItemService', () => {
         user: {
           create: { email: `cart${Date.now()}@test.de`, password: 'pw' },
         },
+        totalPrice: 0,
       },
       include: { user: true },
     });

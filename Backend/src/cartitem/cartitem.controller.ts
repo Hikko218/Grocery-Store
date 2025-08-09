@@ -12,20 +12,22 @@ import {
   NotFoundException,
   Logger,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { CartItemService } from './cartitem.service';
 import { CreateCartItemDto } from './dto/create.cartitem.dto';
 import { UpdateCartItemDto } from './dto/update.cartitem.dto';
 import { ResponseCartItemDto } from './dto/response.cartitem.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 // Controller exposes REST endpoints for cart items with logging and errors
+@UseGuards(AuthGuard('jwt'))
 @Controller('cartitem')
 export class CartItemController {
-  // Inject application service
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly service: CartItemService) {}
 
-  // POST /cartitem -> create new cart item
+  // POST /cartitems
   @Post()
   @HttpCode(201)
   async create(@Body() dto: CreateCartItemDto): Promise<ResponseCartItemDto> {
@@ -39,7 +41,7 @@ export class CartItemController {
     }
   }
 
-  // GET /cartitem?cartId=123 -> list items, optionally filtered by cartId
+  // GET /cartitems?cartId=123
   @Get()
   @HttpCode(200)
   async findAll(
@@ -56,7 +58,7 @@ export class CartItemController {
     }
   }
 
-  // GET /cartitem/:id -> fetch single item
+  // GET /cartitems/:id
   @Get(':id')
   @HttpCode(200)
   async findOne(
@@ -73,7 +75,7 @@ export class CartItemController {
     }
   }
 
-  // PUT /cartitem/:id -> update existing item
+  // PUT /cartitems/:id
   @Put(':id')
   @HttpCode(200)
   async update(
@@ -90,7 +92,7 @@ export class CartItemController {
     }
   }
 
-  // DELETE /cartitem/:id -> remove item
+  // DELETE /cartitems/:id
   @Delete(':id')
   @HttpCode(200)
   async remove(

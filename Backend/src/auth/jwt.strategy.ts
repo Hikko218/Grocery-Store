@@ -8,6 +8,7 @@ import type { Request } from 'express';
 interface JwtPayload {
   sub: number;
   email: string;
+  role?: string;
 }
 
 // Express request with cookies
@@ -35,6 +36,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // Validate and attach user info to request
   async validate(payload: JwtPayload) {
-    return { userId: payload.sub, email: payload.email };
+    return { userId: payload.sub, email: payload.email, role: payload.role };
   }
 }

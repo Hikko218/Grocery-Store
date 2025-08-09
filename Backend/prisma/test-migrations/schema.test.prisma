@@ -17,15 +17,14 @@ model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
-  role      String   @default("user")
-  orders    Order[]
-  cart      Cart?
   createdAt DateTime @default(now())
+  role      String   @default("user")
+  cart      Cart?
+  orders    Order[]
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
-  productId   String   @unique
+  id          Int         @id @default(autoincrement())
   name        String
   brand       String?
   category    String?
@@ -34,50 +33,53 @@ model Product {
   country     String?
   ingredients String?
   calories    String?
-  price       Float?
+  price       Decimal?    
   imageUrl    String?
-  createdAt   DateTime @default(now())
-  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  productId   String      @unique
   cartItems   CartItem[]
+  orderItems  OrderItem[]
+
   @@index([category])
   @@index([name])
   @@index([brand])
 }
 
 model Order {
-  id          Int       @id @default(autoincrement())
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      Int
-  items       OrderItem[]
-  totalPrice  Float
-  createdAt   DateTime  @default(now())
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  totalPrice Decimal     
+  createdAt  DateTime    @default(now())
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items      OrderItem[]
 }
 
 model OrderItem {
-  id          Int      @id @default(autoincrement())
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId     Int
-  product     Product  @relation(fields: [productId], references: [productId])
-  productId   String
-  quantity    Int      @default(1)
-  price       Float
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  productId String
+  quantity  Int      @default(1)
+  price     Decimal  
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [productId])
 }
 
 model Cart {
-  id        Int        @id @default(autoincrement())
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int @unique
-  items     CartItem[]
-  createdAt DateTime   @default(now())
+  id         Int        @id @default(autoincrement())
+  userId     Int        @unique
+  createdAt  DateTime   @default(now())
+  totalPrice Decimal    
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items      CartItem[]
 }
 
 model CartItem {
   id        Int      @id @default(autoincrement())
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
   cartId    Int
-  product   Product  @relation(fields: [productId], references: [productId])
   productId String
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [productId])
 }

@@ -9,6 +9,7 @@ describe('OrderItemService', () => {
   let orderItemId: number;
 
   beforeAll(async () => {
+    // Setup NestJS test module
     const module: TestingModule = await Test.createTestingModule({
       providers: [OrderItemService, PrismaService],
     }).compile();
@@ -21,6 +22,7 @@ describe('OrderItemService', () => {
     await prisma.order.deleteMany({});
     await prisma.user.deleteMany({});
     const uniqueEmail = `test${Date.now()}@test.de`;
+    // Create test order with user
     const order = await prisma.order.create({
       data: {
         user: { create: { email: uniqueEmail, password: 'pw' } },
@@ -29,14 +31,14 @@ describe('OrderItemService', () => {
     });
     orderId = order.id;
 
-    // Produkt für den Test anlegen
+    // Create product for test
     await prisma.product.create({
       data: { productId: 'p1', name: 'Testprodukt', price: 1 },
     });
   });
 
   it('should create, get, update, and delete an order item', async () => {
-    // Create
+    // Create order item
     const item = await service.createOrderItem({
       orderId: orderId,
       productId: 'p1',
@@ -47,18 +49,19 @@ describe('OrderItemService', () => {
     expect(item).toBeDefined();
     expect(item.orderId).toBe(orderId);
 
-    // Get
+    // Get order items
     const items = await service.getOrderItems(orderId);
     expect(Array.isArray(items)).toBe(true);
     expect(items.length).toBeGreaterThan(0);
 
-    // Update
+    // Update order item
     const updated = await service.updateOrderItem(orderItemId, { quantity: 5 });
     expect(updated.quantity).toBe(5);
 
-    // Delete
+    // Delete order item
     await service.deleteOrderItem(orderItemId);
     const afterDelete = await service.getOrderItems(orderId);
+    // Check that deleted item is not present
     expect(afterDelete.find((i) => i.id === orderItemId)).toBeUndefined();
   });
 });

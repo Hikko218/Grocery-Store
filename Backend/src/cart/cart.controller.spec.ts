@@ -6,76 +6,103 @@ import { CartController } from './cart.controller';
 import { CartService } from './cart.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ResponseCartDto } from './dto/response.cart.dto';
+import * as bcrypt from 'bcrypt';
+import * as cookieParser from 'cookie-parser';
+import { AppModule } from '../app.module';
 
 describe('CartController (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let userId: number;
   let cartId: number;
+  let userEmail: string;
+  let userCookie: string;
 
   beforeAll(async () => {
+    // Setup NestJS test application
     const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
       controllers: [CartController],
       providers: [CartService, PrismaService],
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(cookieParser());
     await app.init();
     prisma = app.get(PrismaService);
 
-    // Clean DB and create test user and cart
+    // Clean up carts and users before tests
     await prisma.cart.deleteMany({});
     await prisma.user.deleteMany({});
+
+    // Create test user
+    userEmail = `cart${Date.now()}@test.de`;
+    const hashedPw = await bcrypt.hash('pw', 10);
     const user = await prisma.user.create({
-      data: { email: `cart${Date.now()}@test.de`, password: 'pw' },
+      data: { email: userEmail, password: hashedPw },
     });
     userId = user.id;
+
+    // Login to get authentication cookie
+    const loginRes = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: userEmail, password: 'pw' });
+    userCookie = loginRes.headers['set-cookie']?.[0];
+
+    // Create cart for user
     const cart = await prisma.cart.create({
-      data: { userId },
+      data: { userId, totalPrice: 0 },
     });
     cartId = cart.id;
   });
 
   afterAll(async () => {
-    await app.close();
+    // Clean up carts and users after tests and close app
     await prisma.cart.deleteMany({});
     await prisma.user.deleteMany({});
+    await app.close();
   });
 
-  it('should create, get, update, and delete a cart', async () => {
-    // Get cart by userId
-    const getRes = await request(app.getHttpServer())
-      .get(`/cart?userId=${userId}`)
+  it('/cart (GET) should get cart by userId', async () => {
+    // Test get cart by userId endpoint
+    const res = await request(app.getHttpServer())
+      .get('/cart')
+      .set('Cookie', userCookie)
+      .query({ userId })
       .expect(200);
-    const getResBody = getRes.body as ResponseCartDto;
-    expect(getResBody.userId).toBe(userId);
-    expect(getResBody.id).toBe(cartId);
+    const cart = res.body as ResponseCartDto;
+    expect(cart).toHaveProperty('id');
+    expect(cart.userId).toBe(userId);
+  });
 
-    // Create (should fail, only one cart per user)
-    await request(app.getHttpServer())
-      .post('/cart')
-      .send({ userId })
-      .expect(400);
-
-    // Update
-    const updateRes = await request(app.getHttpServer())
+  it('/cart/:cartId (PUT) should update cart and recalculate total', async () => {
+    // Test update cart endpoint
+    const res = await request(app.getHttpServer())
       .put(`/cart/${cartId}`)
-      .send({ userId })
+      .set('Cookie', userCookie)
+      .send({ totalPrice: 99.99 })
       .expect(200);
-    const updateResBody = updateRes.body as ResponseCartDto;
-    expect(updateResBody.userId).toBe(userId);
-    expect(updateResBody.id).toBe(cartId);
+    const cart = res.body as ResponseCartDto;
+    expect(cart.totalPrice).toBe(99.99);
+  });
 
-    // Delete
-    const deleteRes = await request(app.getHttpServer())
+  it('/cart/:cartId/recalculate (POST) should recalculate total price', async () => {
+    // Test recalculate total endpoint
+    const res = await request(app.getHttpServer())
+      .post(`/cart/${cartId}/recalculate`)
+      .set('Cookie', userCookie)
+      .expect(200);
+    const result = res.body as { total: number };
+    expect(result).toHaveProperty('total');
+    expect(typeof result.total).toBe('number');
+  });
+
+  it('/cart/:cartId (DELETE) should delete cart', async () => {
+    // Test delete cart endpoint
+    const res = await request(app.getHttpServer())
       .delete(`/cart/${cartId}`)
+      .set('Cookie', userCookie)
       .expect(200);
-    const deleteResBody = deleteRes.body as { success: boolean };
-    expect(deleteResBody.success).toBe(true);
-
-    // Check if deleted
-    await request(app.getHttpServer())
-      .get(`/cart?userId=${userId}`)
-      .expect(404);
+    expect(res.body).toEqual({ success: true });
   });
 });

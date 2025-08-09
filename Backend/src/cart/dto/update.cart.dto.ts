@@ -1,8 +1,7 @@
-import { IsOptional, IsInt, IsPositive } from 'class-validator';
+import { IsOptional, IsNumber } from 'class-validator';
 
 export class UpdateCartDto {
   @IsOptional()
-  @IsInt()
-  @IsPositive()
-  userId?: number;
+  @IsNumber()
+  totalPrice?: number;
 }

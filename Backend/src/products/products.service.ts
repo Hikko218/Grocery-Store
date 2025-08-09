@@ -3,7 +3,26 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProductDto } from './dto/update.product.dto';
 import { CreateProductDto } from './dto/create.product.dto';
 import { ResponseProductDto } from './dto/response.product.dto';
-import { plainToInstance } from 'class-transformer';
+import type { Product } from '@prisma/client';
+
+function toProductResponse(p: Product): ResponseProductDto {
+  return {
+    id: p.id,
+    productId: p.productId,
+    name: p.name,
+    brand: p.brand ?? undefined,
+    category: p.category ?? undefined,
+    quantity: p.quantity ?? undefined,
+    packaging: p.packaging ?? undefined,
+    country: p.country ?? undefined,
+    ingredients: p.ingredients ?? undefined,
+    calories: p.calories ?? undefined,
+    price:
+      p.price !== null && p.price !== undefined ? Number(p.price) : undefined,
+    imageUrl: p.imageUrl ?? undefined,
+    createdAt: p.createdAt,
+  };
+}
 
 @Injectable()
 export class ProductsService {
@@ -23,15 +42,18 @@ export class ProductsService {
       },
       take: 20,
     });
-    return products.map((p) => plainToInstance(ResponseProductDto, p));
+    return products.map(toProductResponse);
   }
 
   // Create product
   async createProduct(data: CreateProductDto): Promise<ResponseProductDto> {
     const product = await this.prisma.product.create({
-      data,
+      data: {
+        ...data,
+        price: data.price !== undefined ? data.price : null,
+      },
     });
-    return plainToInstance(ResponseProductDto, product);
+    return toProductResponse(product);
   }
 
   // Update note for user
@@ -39,18 +61,19 @@ export class ProductsService {
     productId: string,
     data: UpdateProductDto,
   ): Promise<ResponseProductDto> {
-    const product = await this.prisma.product.update({
-      where: { productId: productId },
-      data,
+    const updated = await this.prisma.product.update({
+      where: { productId },
+      data: {
+        ...data,
+        price: data.price !== undefined ? data.price : null,
+      },
     });
-    return plainToInstance(ResponseProductDto, product);
+    return toProductResponse(updated);
   }
 
   // Delete note
-  async deleteProduct(productId: string): Promise<ResponseProductDto> {
-    const product = await this.prisma.product.delete({
-      where: { productId: productId },
-    });
-    return plainToInstance(ResponseProductDto, product);
+  async deleteProduct(productId: string): Promise<{ success: boolean }> {
+    await this.prisma.product.delete({ where: { productId } });
+    return { success: true };
   }
 }
