@@ -1,95 +1,100 @@
 import {
   Controller,
-  Get,
   Post,
+  Get,
   Put,
   Delete,
-  Param,
   Body,
+  Param,
   Query,
   ParseIntPipe,
   HttpCode,
-  Logger,
   BadRequestException,
   NotFoundException,
-  UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
+import { CreateOrderDto } from './dto/create.order.dto';
 import { UpdateOrderDto } from './dto/update.order.dto';
 import { ResponseOrderDto } from './dto/response.order.dto';
-import { AuthGuard } from '@nestjs/passport';
-import { AdminGuard } from '../auth/auth.guard';
 
-@UseGuards(AuthGuard('jwt'))
 @Controller('order')
 export class OrderController {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly orderService: OrderService) {}
 
-  // GET /order?userId=1
-  @Get()
-  @HttpCode(200)
-  async getOrders(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<ResponseOrderDto[]> {
-    try {
-      const orders = await this.orderService.getOrders(userId);
-      Logger.log('Successfully retrieved orders');
-      return orders;
-    } catch (error) {
-      Logger.error(`Error retrieving orders: ${error}`);
-      throw new NotFoundException('No orders found for user');
-    }
-  }
-
   // POST /order
   @Post()
   @HttpCode(201)
-  async createOrder(
-    @Body() body: { userId: number },
-  ): Promise<ResponseOrderDto> {
+  async create(@Body() dto: CreateOrderDto): Promise<ResponseOrderDto> {
     try {
-      const order = await this.orderService.createOrder(body.userId);
-      Logger.log('Successfully created order');
+      const order = await this.orderService.create(dto);
+      Logger.log(`Created order ${order.id} for user ${order.userId}`);
       return order;
-    } catch (error) {
-      Logger.error(`Error creating order: ${error}`);
-      throw new BadRequestException('Cannot create order');
+    } catch (err) {
+      Logger.error(
+        `Error creating order`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new BadRequestException('Cant create order');
+    }
+  }
+
+  // GET /order?userId=123
+  @Get()
+  @HttpCode(200)
+  async find(
+    @Query('userId', ParseIntPipe) userId: number,
+  ): Promise<ResponseOrderDto[]> {
+    try {
+      const orders = await this.orderService.findByUser(userId);
+      Logger.log(`Fetched ${orders.length} orders for user ${userId}`);
+      return orders;
+    } catch (err) {
+      Logger.error(
+        `Error fetching orders for user ${userId}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new NotFoundException('Cant get orders');
     }
   }
 
   // PUT /order/:orderId
-  @UseGuards(AuthGuard('jwt'), AdminGuard)
   @Put(':orderId')
   @HttpCode(200)
-  async updateOrder(
+  async update(
     @Param('orderId', ParseIntPipe) orderId: number,
-    @Body() data: UpdateOrderDto,
+    @Body() dto: UpdateOrderDto,
   ): Promise<ResponseOrderDto> {
     try {
-      const order = await this.orderService.updateOrder(orderId, data);
-      Logger.log('Successfully updated order');
+      const order = await this.orderService.update(orderId, dto);
+      Logger.log(`Updated order ${orderId}`);
       return order;
-    } catch (error) {
-      Logger.error(`Error updating order: ${error}`);
-      throw new BadRequestException('Cannot update order');
+    } catch (err) {
+      Logger.error(
+        `Error updating order ${orderId}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new BadRequestException('Cant update order');
     }
   }
 
   // DELETE /order/:orderId
-  @UseGuards(AuthGuard('jwt'), AdminGuard)
   @Delete(':orderId')
   @HttpCode(200)
-  async deleteOrder(
+  async remove(
     @Param('orderId', ParseIntPipe) orderId: number,
   ): Promise<{ success: boolean }> {
     try {
-      await this.orderService.deleteOrder(orderId);
-      Logger.log('Order successfully deleted');
-      return { success: true };
-    } catch (error) {
-      Logger.error(`Error deleting order: ${error}`);
-      throw new BadRequestException('Cannot delete order');
+      const res = await this.orderService.delete(orderId);
+      Logger.log(`Deleted order ${orderId}`);
+      return res;
+    } catch (err) {
+      Logger.error(
+        `Error deleting order ${orderId}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new BadRequestException('Cant delete order');
     }
   }
 }

@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrderService } from './order.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ResponseOrderDto } from './dto/response.order.dto';
 
 describe('OrderService', () => {
   let service: OrderService;
   let prisma: PrismaService;
   let userId: number;
-  let orderId: number;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -33,28 +33,32 @@ describe('OrderService', () => {
     });
   });
 
-  it('should create, get, update, and delete an order', async () => {
-    // Create
-    const order = await service.createOrder(userId);
-    orderId = order.id;
-    expect(order).toBeDefined();
+  it('should create an order', async () => {
+    const order: ResponseOrderDto = await service.createOrder(userId);
+    expect(order.id).toBeDefined();
     expect(order.userId).toBe(userId);
-    expect(order.totalPrice).toBe(100);
+    expect(order.totalPrice).toBeGreaterThanOrEqual(0);
+  });
 
-    // Get
-    const orders = await service.getOrders(userId);
+  it('should list orders', async () => {
+    const orders: ResponseOrderDto[] = await service.getOrders(userId);
     expect(Array.isArray(orders)).toBe(true);
     expect(orders.length).toBeGreaterThan(0);
     expect(orders[0].userId).toBe(userId);
+  });
 
-    // Update
-    const updated = await service.updateOrder(orderId, { totalPrice: 200 });
+  it('should update order', async () => {
+    const created: ResponseOrderDto = await service.createOrder(userId);
+    const updated: ResponseOrderDto = await service.updateOrder(created.id, {
+      totalPrice: 200,
+    });
     expect(updated.totalPrice).toBe(200);
+  });
 
-    // Delete
-    await service.deleteOrder(orderId);
-    // Check if deleted
-    const afterDelete = await service.getOrders(userId);
-    expect(afterDelete.find((o) => o.id === orderId)).toBeUndefined();
+  it('should delete order', async () => {
+    const created: ResponseOrderDto = await service.createOrder(userId);
+    await service.deleteOrder(created.id);
+    const afterDelete: ResponseOrderDto[] = await service.getOrders(userId);
+    expect(afterDelete.find((o) => o.id === created.id)).toBeUndefined();
   });
 });

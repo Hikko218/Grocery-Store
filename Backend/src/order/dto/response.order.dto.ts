@@ -3,14 +3,35 @@ import { Exclude, Expose } from 'class-transformer';
 @Exclude()
 export class ResponseOrderDto {
   @Expose()
-  id: number;
+  id!: number;
 
   @Expose()
-  userId: number;
+  userId!: number;
 
   @Expose()
-  totalPrice: number;
+  totalPrice!: number;
 
   @Expose()
-  createdAt: Date;
+  createdAt!: string;
+
+  @Expose()
+  shippingName!: string;
+
+  @Expose()
+  shippingStreet!: string;
+
+  @Expose()
+  shippingStreet2?: string | null;
+
+  @Expose()
+  shippingPostalCode!: string;
+
+  @Expose()
+  shippingCity!: string;
+
+  @Expose()
+  shippingCountry!: string;
+
+  @Expose()
+  shippingPhone?: string | null;
 }

@@ -25,6 +25,20 @@ export class ProductsController {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly productsService: ProductsService) {}
 
+  // GET /products/categories
+  @Get('categories')
+  @HttpCode(200)
+  async categories(): Promise<string[]> {
+    try {
+      const cats = await this.productsService.getCategories();
+      Logger.log(`Successfully received product categories`);
+      return cats;
+    } catch (error) {
+      Logger.error(`Error retrieving product categories: ${error}`);
+      throw new NotFoundException('Cant get categories');
+    }
+  }
+
   // GET /products?searchTerm=salt&sortBy=price&sortOrder=asc
   @Get('/')
   @HttpCode(200)
@@ -34,6 +48,7 @@ export class ProductsController {
     @Query('sortOrder') sortOrder?: 'asc' | 'desc',
     @Query('take') take: number = 12,
     @Query('skip') skip: number = 0,
+    @Query('category') category?: string,
   ): Promise<ResponseProductDto[]> {
     try {
       const products = await this.productsService.getProducts(
@@ -42,6 +57,7 @@ export class ProductsController {
         sortOrder,
         Number(take),
         Number(skip),
+        category,
       );
       if (!products) {
         throw new NotFoundException('Cant get products');
@@ -54,6 +70,7 @@ export class ProductsController {
     }
   }
 
+  // Get /products/productsiD
   @Get(':productId')
   @HttpCode(200)
   async getProductById(

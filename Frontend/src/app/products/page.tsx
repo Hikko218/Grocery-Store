@@ -11,6 +11,7 @@ export default async function ProductsPage({
     typeof v === "string" ? v : Array.isArray(v) ? v[0] ?? "" : "";
 
   const searchTerm = toStr(params.searchTerm);
+  const category = toStr(params.category); // NEW
   const sortByRaw = toStr(params.sortBy);
   const sortOrderRaw = toStr(params.sortOrder);
 
@@ -26,6 +27,7 @@ export default async function ProductsPage({
       <h1 className="mb-4 text-2xl font-bold text-slate-900">Products</h1>
       <ProductsBanner
         searchTerm={searchTerm}
+        category={category || undefined} // NEW
         sortBy={sortBy}
         sortOrder={sortOrder}
       />

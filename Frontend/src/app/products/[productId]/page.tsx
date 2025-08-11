@@ -1,5 +1,5 @@
 import ProductDetails from "@/components/ProductDetails";
-import { fetchProductById } from "@/lib/products";
+import { fetchProductById, type Product } from "@/lib/products";
 
 export default async function ProductDetailsPage({
   params,
@@ -7,7 +7,7 @@ export default async function ProductDetailsPage({
   params: Promise<{ productId: string }>;
 }) {
   const { productId } = await params;
-  const product = await fetchProductById(productId);
+  const product: Product = await fetchProductById(productId);
 
   return (
     <main className="pt-24">

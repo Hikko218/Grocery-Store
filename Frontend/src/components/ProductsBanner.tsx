@@ -1,32 +1,34 @@
 "use client";
-
+import ProductCard from "@/components/ProductCard";
+import { useCart } from "@/context/CartContext";
 import { useState, useEffect } from "react";
-import ProductCard from "./ProductCard";
 import type { Product } from "../lib/products";
 import Link from "next/link";
 import { fetchProducts } from "@/lib/products";
 
-type Props = {
+const TAKE = 12;
+
+export default function ProductsBanner(props: {
   searchTerm?: string;
+  category?: string;
   sortBy?: "name" | "price";
   sortOrder?: "asc" | "desc";
   title?: string;
   subtitle?: string;
-};
-
-const TAKE = 12;
-
-export default function ProductsBanner({
-  searchTerm = "",
-  sortBy = "name",
-  sortOrder = "asc",
-  title = "Featured this week",
-  subtitle = "Hand-picked items you might like",
-}: Props) {
+}) {
+  const {
+    searchTerm = "",
+    category,
+    sortBy = "name",
+    sortOrder = "asc",
+    title = "Featured this week",
+    subtitle = "Hand-picked items you might like",
+  } = props;
   const [products, setProducts] = useState<Product[]>([]);
   const [skip, setSkip] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const { addItem } = useCart();
 
   // Initial load & reload on search/sort change
   useEffect(() => {
@@ -35,12 +37,13 @@ export default function ProductsBanner({
     setHasMore(true);
     loadMore(true);
     // eslint-disable-next-line
-  }, [searchTerm, sortBy, sortOrder]);
+  }, [searchTerm, category, sortBy, sortOrder]);
 
   const loadMore = async (reset = false) => {
     setLoading(true);
     const newProducts = await fetchProducts({
       searchTerm: searchTerm.trim() || undefined,
+      category,
       sortBy,
       sortOrder,
       take: TAKE,
@@ -50,6 +53,26 @@ export default function ProductsBanner({
     setSkip((prev) => (reset ? TAKE : prev + TAKE));
     setHasMore(newProducts.length === TAKE);
     setLoading(false);
+  };
+
+  const handleAdd = (
+    p: {
+      productId: string;
+      name: string;
+      price: number;
+      imageUrl?: string | null;
+    },
+    qty: number
+  ) => {
+    addItem(
+      {
+        productId: p.productId,
+        name: p.name,
+        price: Number(p.price) || 0,
+        imageUrl: p.imageUrl ?? undefined,
+      },
+      qty
+    );
   };
 
   const resultsCount = products.length;
@@ -89,17 +112,15 @@ export default function ProductsBanner({
         )}
 
         {resultsCount > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {products.map((p: Product) => (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {products.map((p) => (
               <ProductCard
-                key={p.id}
+                key={p.productId}
                 title={p.name}
-                price={p.price ?? 0}
+                price={Number(p.price) || 0}
                 imageSrc={p.imageUrl ?? undefined}
                 linkTo={`/products/${p.productId}`}
-                onAdd={() => {
-                  // TODO: wire up add-to-cart
-                }}
+                onAdd={(qty) => handleAdd(p, qty)} // pass quantity
               />
             ))}
           </div>

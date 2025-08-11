@@ -74,11 +74,21 @@ describe('OrderController (e2e)', () => {
   });
 
   it('should create, get, update, and delete an order', async () => {
-    // Create
+    // Create (jetzt mit Shipping-Feldern)
     const createRes = await request(app.getHttpServer())
       .post('/order')
       .set('Cookie', adminCookie)
-      .send({ userId })
+      .send({
+        userId,
+        shippingName: 'Max Mustermann',
+        shippingStreet: 'Musterstr. 1',
+        shippingPostalCode: '12345',
+        shippingCity: 'Musterstadt',
+        shippingCountry: 'DE',
+        // optional:
+        shippingStreet2: 'c/o',
+        shippingPhone: '+49123456789',
+      })
       .expect(201);
     const createResBody = createRes.body as ResponseOrderDto;
     expect(createResBody).toBeDefined();
@@ -100,10 +110,11 @@ describe('OrderController (e2e)', () => {
     const updateRes = await request(app.getHttpServer())
       .put(`/order/${orderId}`)
       .set('Cookie', adminCookie)
-      .send({ totalPrice: 200 })
+      .send({ totalPrice: 200, shippingCity: 'Neu-Stadt' })
       .expect(200);
     const updateResBody = updateRes.body as ResponseOrderDto;
     expect(updateResBody.totalPrice).toBe(200);
+    expect(updateResBody.shippingCity).toBe('Neu-Stadt');
 
     // Delete
     const deleteRes = await request(app.getHttpServer())

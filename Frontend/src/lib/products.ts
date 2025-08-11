@@ -16,23 +16,25 @@ export type Product = {
 
 type Params = {
   searchTerm?: string;
+  category?: string;
   sortBy?: "name" | "price";
   sortOrder?: "asc" | "desc";
-  take?: number; 
+  take?: number;
   skip?: number;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
 
 export async function fetchProducts(params: Params = {}): Promise<Product[]> {
   const qs = new URLSearchParams();
   const term = params.searchTerm?.trim();
   if (term) qs.set("searchTerm", term);
+  if (params.category?.trim()) qs.set("category", params.category.trim()); // NEW
   if (params.sortBy) qs.set("sortBy", params.sortBy);
   if (params.sortOrder) qs.set("sortOrder", params.sortOrder);
   if (typeof params.take === "number") qs.set("take", String(params.take));
-  if (typeof params.skip === "number") qs.set("skip", String(params.skip)); 
+  if (typeof params.skip === "number") qs.set("skip", String(params.skip));
 
   const url = `${API_URL}/products${qs.size ? `?${qs.toString()}` : ""}`;
   const res = await fetch(url, { cache: "no-store", credentials: "include" });

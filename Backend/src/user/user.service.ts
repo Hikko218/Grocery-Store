@@ -1,104 +1,100 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create.user.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { ConflictException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import { ResponseUserDto } from './dto/response.user.dto';
-import { plainToInstance } from 'class-transformer';
+import { User as UserModel } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+
+function toUserResponse(u: UserModel): ResponseUserDto {
+  const createdAt =
+    u.createdAt instanceof Date
+      ? u.createdAt.toISOString()
+      : new Date(String(u.createdAt)).toISOString();
+
+  return {
+    id: u.id,
+    email: String(u.email),
+    name: u.name != null ? String(u.name) : null,
+    phone: u.phone != null ? String(u.phone) : null,
+    role: String(u.role),
+    createdAt,
+  };
+}
 
 @Injectable()
 export class UserService {
-  // Inject Prisma service
   // eslint-disable-next-line no-unused-vars
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  // Create user with hashed password
+  async create(data: CreateUserDto): Promise<ResponseUserDto> {
+    const hashedPassword: string = await bcrypt.hash(data.password, 10);
+    const user = await this.prisma.user.create({
+      data: {
+        email: data.email,
+        password: hashedPassword,
+        name: data.name ?? null,
+        phone: data.phone ?? null,
+        role: data.role ?? 'user',
+      },
+    });
+    return toUserResponse(user);
+  }
 
   // Get user by email
   async getUserbyEmail(email: string): Promise<ResponseUserDto | null> {
-    const user = await this.prisma.user.findUnique({ where: { email: email } });
-    return user ? plainToInstance(ResponseUserDto, user) : null;
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    return user ? toUserResponse(user) : null;
   }
 
   // Get user by id
-  async getUserbyId(userId: number): Promise<ResponseUserDto | null> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: Number(userId) },
-    });
-    return user ? plainToInstance(ResponseUserDto, user) : null;
-  }
-
-  // Create user with hashed password
-  async createUser(data: CreateUserDto): Promise<ResponseUserDto> {
-    try {
-      const hashedPassword: string = await bcrypt.hash(data.password, 10);
-      const user = await this.prisma.user.create({
-        data: { ...data, password: hashedPassword },
-      });
-      return plainToInstance(ResponseUserDto, user);
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (error.code === 'P2002') {
-        throw new ConflictException('Email already exists');
-      }
-      throw new BadRequestException('Registration failed');
-    }
+  async findById(id: number): Promise<ResponseUserDto> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+    return toUserResponse(user);
   }
 
   // Update user info
-  async updateUser(
-    userId: number,
-    data: UpdateUserDto,
-  ): Promise<ResponseUserDto> {
-    try {
-      // Fetch the existing user
-      const existingUser = await this.prisma.user.findUnique({
-        where: { id: Number(userId) },
-      });
+  async update(id: number, data: UpdateUserDto): Promise<ResponseUserDto> {
+    const exists = await this.prisma.user.findUnique({ where: { id } });
+    if (!exists) throw new NotFoundException('User not found');
 
-      // Check if user exists
-      if (!existingUser) {
-        throw new NotFoundException('User not found');
-      }
+    const password = data.password
+      ? await bcrypt.hash(data.password, 10)
+      : undefined;
 
-      // Prepare updated object
-      const updates: UpdateUserDto = {};
-
-      // Check and update email
-      if (data.email !== existingUser.email) {
-        updates.email = data.email;
-      }
-      // Check and hash password if updated
-      if (data.password) {
-        const isSamePassword = await bcrypt.compare(
-          data.password,
-          existingUser.password,
-        );
-        if (!isSamePassword) {
-          updates.password = await bcrypt.hash(data.password, 10);
-        }
-      }
-      // Throw error if no changes detected
-      if (Object.keys(updates).length === 0) {
-        throw new BadRequestException('No changes detected');
-      }
-      // Update user in the database
-      const user = await this.prisma.user.update({
-        where: { id: Number(userId) },
-        data: updates,
-      });
-      return plainToInstance(ResponseUserDto, user);
-    } catch (error) {
-      // Handle errors
-      throw new BadRequestException(`Error while updating user: ${error}`);
-    }
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: {
+        email: data.email ?? undefined,
+        password,
+        name: data.name ?? undefined,
+        phone: data.phone ?? undefined,
+        role: data.role ?? undefined,
+      },
+    });
+    return toUserResponse(user);
   }
 
   // Delete user
-  async deleteUser(userId: number): Promise<ResponseUserDto> {
-    const user = await this.prisma.user.delete({
-      where: { id: Number(userId) },
-    });
-    return plainToInstance(ResponseUserDto, user);
+  async delete(id: number): Promise<{ success: boolean }> {
+    const exists = await this.prisma.user.findUnique({ where: { id } });
+    if (!exists) throw new NotFoundException('User not found');
+    await this.prisma.user.delete({ where: { id } });
+    return { success: true };
+  }
+
+  // Compat-Wrapper für Tests
+  async createUser(data: CreateUserDto): Promise<ResponseUserDto> {
+    return this.create(data);
+  }
+
+  async updateUser(id: number, data: UpdateUserDto): Promise<ResponseUserDto> {
+    return this.update(id, data);
+  }
+
+  async deleteUser(id: number): Promise<{ success: boolean }> {
+    return this.delete(id);
   }
 }

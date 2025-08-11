@@ -1,112 +1,117 @@
 import {
   Controller,
-  Get,
   Post,
+  Get,
   Put,
   Delete,
-  Body,
   Param,
-  Logger,
-  BadRequestException,
-  NotFoundException,
+  Body,
+  ParseIntPipe,
   HttpCode,
-  UseGuards,
+  NotFoundException,
+  BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create.user.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
 import { ResponseUserDto } from './dto/response.user.dto';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('user')
 export class UserController {
-  // Service injection
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly userService: UserService) {}
 
-  // GET /user/:email: Get user by email
+  @Post()
+  @HttpCode(201)
+  async create(@Body() dto: CreateUserDto): Promise<ResponseUserDto> {
+    try {
+      const user = await this.userService.createUser(dto);
+      Logger.log(`Created user ${user.id}`);
+      return user;
+    } catch (err) {
+      Logger.error(
+        `Error creating user`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new BadRequestException('Cant create user');
+    }
+  }
+
+  // id-Route vor Email-Route
+  @Get('id/:id')
+  @HttpCode(200)
+  async getById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ResponseUserDto> {
+    try {
+      const user = await this.userService.findById(id);
+      Logger.log(`Fetched user by id ${id}`);
+      return user;
+    } catch (err) {
+      Logger.error(
+        `Error fetching user by id ${id}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new NotFoundException('Cant get user');
+    }
+  }
+
   @Get(':email')
   @HttpCode(200)
-  async getUserByEmail(
-    @Param('email') email: string,
-  ): Promise<ResponseUserDto> {
+  async getByEmail(@Param('email') email: string): Promise<ResponseUserDto> {
     try {
       const user = await this.userService.getUserbyEmail(email);
       if (!user) {
+        Logger.warn(`User with email ${email} not found`);
         throw new NotFoundException('User not found');
       }
-      Logger.log('Successfully retrieved user');
+      Logger.log(`Fetched user by email ${email}`);
       return user;
-    } catch (error) {
-      Logger.error(`Error retrieving user ${email}: ${error}`);
-      throw new NotFoundException('User not found');
+    } catch (err) {
+      if (err instanceof NotFoundException) throw err;
+      Logger.error(
+        `Error fetching user by email ${email}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new NotFoundException('Cant get user');
     }
   }
 
-  // GET /user/id/:userId: Get user by ID
-  @UseGuards(AuthGuard('jwt'))
-  @Get('id/:userId')
-  @HttpCode(200)
-  async getUserById(@Param('userId') userId: number): Promise<ResponseUserDto> {
-    try {
-      const user = await this.userService.getUserbyId(userId);
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-      Logger.log('Successfully retrieved user');
-      return user;
-    } catch (error) {
-      Logger.error(`Error retrieving user ${userId}: ${error}`);
-      throw new NotFoundException('User not found');
-    }
-  }
-
-  // POST /user: Create new user
-  @Post()
-  @HttpCode(201)
-  async createUser(
-    @Body() createUserDto: CreateUserDto,
-  ): Promise<ResponseUserDto> {
-    try {
-      const user = await this.userService.createUser(createUserDto);
-      Logger.log('Successfully created user');
-      return user;
-    } catch (error) {
-      Logger.error(`Error creating user: ${error}`);
-      throw new BadRequestException('Registration failed!');
-    }
-  }
-
-  // PUT /user/id Update user
-  @UseGuards(AuthGuard('jwt'))
   @Put(':id')
   @HttpCode(200)
-  async updateUser(
-    @Param('id') userId: number,
-    @Body() updateUserDto: UpdateUserDto,
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateUserDto,
   ): Promise<ResponseUserDto> {
     try {
-      const user = await this.userService.updateUser(userId, updateUserDto);
-      Logger.log('Successfully updated user');
+      const user = await this.userService.updateUser(id, dto);
+      Logger.log(`Updated user ${id}`);
       return user;
-    } catch (error) {
-      Logger.error(`Error updating user ${userId}: ${error}`);
-      throw new BadRequestException('Cannot update user');
+    } catch (err) {
+      Logger.error(
+        `Error updating user ${id}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new BadRequestException('Cant update user');
     }
   }
 
-  // Delete /user/id Delete user
-  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   @HttpCode(200)
-  async deleteUser(@Param('id') userId: number): Promise<{ success: boolean }> {
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ success: boolean }> {
     try {
-      await this.userService.deleteUser(userId);
-      Logger.log('Successfully deleted user');
-      return { success: true };
-    } catch (error) {
-      Logger.error(`Error deleting user ${userId}: ${error}`);
-      throw new BadRequestException('Cannot delete user');
+      const res = await this.userService.deleteUser(id);
+      Logger.log(`Deleted user ${id}`);
+      return res;
+    } catch (err) {
+      Logger.error(
+        `Error deleting user ${id}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new BadRequestException('Cant delete user');
     }
   }
 }

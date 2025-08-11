@@ -3,18 +3,42 @@
 import Image from "next/image";
 import type { Product } from "@/lib/products";
 import { useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
+import { useState } from "react";
 
 type Props = {
   product: Product;
-  onAdd?: (p: Product) => void;
+  onAdd?: (p: Product, qty: number) => void; // changed: pass product + quantity
 };
 
 export default function ProductDetails({ product, onAdd }: Props) {
   const router = useRouter();
+  const { addItem } = useCart();
+  const [qty, setQty] = useState<number>(1);
+
   const handleBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1)
       router.back();
     else router.push("/products");
+  };
+
+  const dec = () => setQty((q) => Math.max(1, q - 1));
+  const inc = () => setQty((q) => q + 1);
+
+  const handleAddLocal = () => {
+    if (onAdd) {
+      onAdd(product, qty);
+      return;
+    }
+    addItem(
+      {
+        productId: product.productId,
+        name: product.name,
+        price: Number(product.price ?? 0),
+        imageUrl: product.imageUrl ?? undefined,
+      },
+      qty
+    );
   };
 
   const {
@@ -116,10 +140,30 @@ export default function ProductDetails({ product, onAdd }: Props) {
           </div>
         )}
 
-        <div className="mt-8">
+        <div className="mt-8 flex items-center gap-4">
+          <div className="inline-flex items-center gap-2">
+            <button
+              type="button"
+              onClick={dec}
+              className="h-9 w-9 rounded border text-slate-700 hover:bg-red-500"
+              aria-label="Decrease"
+            >
+              −
+            </button>
+            <span className="w-8 text-center text-sm">{qty}</span>
+            <button
+              type="button"
+              onClick={inc}
+              className="h-9 w-9 rounded border text-slate-700 hover:bg-emerald-500"
+              aria-label="Increase"
+            >
+              +
+            </button>
+          </div>
+
           <button
             type="button"
-            onClick={() => onAdd?.(product)}
+            onClick={handleAddLocal}
             className="rounded-md bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           >
             Add to cart

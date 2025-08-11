@@ -21,12 +21,21 @@ describe('OrderItemService', () => {
     await prisma.orderItem.deleteMany({});
     await prisma.order.deleteMany({});
     await prisma.user.deleteMany({});
-    const uniqueEmail = `test${Date.now()}@test.de`;
     // Create test order with user
     const order = await prisma.order.create({
       data: {
-        user: { create: { email: uniqueEmail, password: 'pw' } },
-        totalPrice: 10,
+        user: {
+          create: { email: `user+${Date.now()}@test.de`, password: 'pw' },
+        },
+        totalPrice: 0,
+        shippingName: 'Test User',
+        shippingStreet: 'Teststraße 1',
+        shippingPostalCode: '12345',
+        shippingCity: 'Berlin',
+        shippingCountry: 'DE',
+        // optional:
+        shippingStreet2: '1. OG',
+        shippingPhone: '+49123456789',
       },
     });
     orderId = order.id;

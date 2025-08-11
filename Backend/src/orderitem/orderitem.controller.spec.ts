@@ -48,8 +48,16 @@ describe('OrderItemController', () => {
     // Create order for user
     const order = await prisma.order.create({
       data: {
-        userId,
-        totalPrice: 10,
+        userId, // bestehender User
+        totalPrice: 0,
+        shippingName: 'Test User',
+        shippingStreet: 'Teststraße 1',
+        shippingPostalCode: '12345',
+        shippingCity: 'Berlin',
+        shippingCountry: 'DE',
+        // optional:
+        shippingStreet2: '1. OG',
+        shippingPhone: '+49123456789',
       },
     });
     orderId = order.id;

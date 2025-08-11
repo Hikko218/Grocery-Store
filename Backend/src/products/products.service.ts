@@ -28,6 +28,16 @@ function toProductResponse(p: Product): ResponseProductDto {
 // Check if insensitive search is supported
 const SUPPORTS_INSENSITIVE = process.env.INSENSITIVE_SEARCH === 'true';
 
+// Type savety helper for string filter
+const containsFilter = (value: string): Prisma.StringFilter<'Product'> => {
+  return SUPPORTS_INSENSITIVE
+    ? ({
+        contains: value,
+        mode: 'insensitive',
+      } as unknown as Prisma.StringFilter<'Product'>)
+    : ({ contains: value } as Prisma.StringFilter<'Product'>);
+};
+
 @Injectable()
 export class ProductsService {
   // Inject Prisma service
@@ -50,23 +60,22 @@ export class ProductsService {
     sortOrder: 'asc' | 'desc' = 'asc',
     take: number = 12,
     skip: number = 0,
+    category?: string,
   ): Promise<ResponseProductDto[]> {
     const term = (searchTerm ?? '').trim();
+    const cat = (category ?? '').trim();
     let where: Prisma.ProductWhereInput | undefined = undefined;
 
-    if (term) {
-      const modeOpt = SUPPORTS_INSENSITIVE
-        ? { mode: 'insensitive' as const }
-        : {};
-
+    if (cat) {
+      where = {
+        category: containsFilter(cat),
+      };
+    } else if (term) {
       where = {
         OR: [
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          { category: { contains: term, ...modeOpt } as unknown as any },
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          { name: { contains: term, ...modeOpt } as unknown as any },
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          { brand: { contains: term, ...modeOpt } as unknown as any },
+          { category: containsFilter(term) },
+          { name: containsFilter(term) },
+          { brand: containsFilter(term) },
         ],
       };
     }
@@ -78,6 +87,18 @@ export class ProductsService {
       skip,
     });
     return products.map(toProductResponse);
+  }
+
+  // Get product categories
+  async getCategories(): Promise<string[]> {
+    const rows = await this.prisma.product.findMany({
+      select: { category: true },
+      distinct: ['category'],
+      orderBy: { category: 'asc' },
+    });
+    return rows
+      .map((r) => r.category)
+      .filter((c): c is string => typeof c === 'string' && c.trim().length > 0);
   }
 
   // Create product

@@ -7,14 +7,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AddressType {
+  SHIPPING
+  BILLING
+}
+
+model Address {
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  type       AddressType
+  isDefault  Boolean     @default(false)
+  name       String?     
+  street     String
+  street2    String?
+  postalCode String
+  city       String
+  country    String
+  phone      String?
+  createdAt  DateTime    @default(now())
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
+  name      String?            
+  phone     String?
   createdAt DateTime @default(now())
   role      String   @default("user")
   cart      Cart?
   orders    Order[]
+  addresses Address[] 
 }
 
 model Product {
@@ -41,12 +67,21 @@ model Product {
 }
 
 model Order {
-  id         Int         @id @default(autoincrement())
-  userId     Int
-  totalPrice Decimal     @db.Decimal(12, 2)
-  createdAt  DateTime    @default(now())
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items      OrderItem[]
+  id                  Int         @id @default(autoincrement())
+  userId              Int
+  totalPrice          Decimal     @db.Decimal(12, 2)
+  createdAt           DateTime    @default(now())
+  shippingName        String
+  shippingStreet      String
+  shippingStreet2     String?
+  shippingPostalCode  String
+  shippingCity        String
+  shippingCountry     String
+  shippingPhone       String?
+  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items               OrderItem[]
+
+  @@index([userId, createdAt])
 }
 
 model OrderItem {
