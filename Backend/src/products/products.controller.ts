@@ -25,14 +25,24 @@ export class ProductsController {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly productsService: ProductsService) {}
 
-  // GET /products?searchTerm=salt
+  // GET /products?searchTerm=salt&sortBy=price&sortOrder=asc
   @Get('/')
   @HttpCode(200)
   async getProducts(
     @Query('searchTerm') searchTerm: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+    @Query('take') take: number = 12,
+    @Query('skip') skip: number = 0,
   ): Promise<ResponseProductDto[]> {
     try {
-      const products = await this.productsService.getProducts(searchTerm);
+      const products = await this.productsService.getProducts(
+        searchTerm,
+        sortBy,
+        sortOrder,
+        Number(take),
+        Number(skip),
+      );
       if (!products) {
         throw new NotFoundException('Cant get products');
       }
@@ -41,6 +51,24 @@ export class ProductsController {
     } catch (error) {
       Logger.error(`Error retrieving products: ${error}`);
       throw new NotFoundException('Cant get products');
+    }
+  }
+
+  @Get(':productId')
+  @HttpCode(200)
+  async getProductById(
+    @Param('productId') productId: string,
+  ): Promise<ResponseProductDto> {
+    try {
+      const product = await this.productsService.getProductById(productId);
+      if (!product) {
+        throw new NotFoundException(`Product "${productId}" not found`);
+      }
+      Logger.log(`Successfully received product ${productId}`);
+      return product;
+    } catch (error) {
+      Logger.error(`Error retrieving product ${productId}: ${error}`);
+      throw new NotFoundException('Cant get product');
     }
   }
 

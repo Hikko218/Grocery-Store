@@ -15,6 +15,9 @@ export class ResponseProductDto {
   brand?: string;
 
   @Expose()
+  description?: string;
+
+  @Expose()
   category?: string;
 
   @Expose()

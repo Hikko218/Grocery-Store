@@ -8,17 +8,10 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "npx prisma generate && cross-env NODE_ENV=development nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:dev": "cross-env NODE_ENV=development INSENSITIVE_SEARCH=true npx prisma generate && cross-env NODE_ENV=development INSENSITIVE_SEARCH=true nest start --watch",
+    "start:prod": "cross-env INSENSITIVE_SEARCH=true node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest --runInBand",
-    "test:ci": "npx prisma generate --schema=prisma/test-migrations/schema.test.prisma && npx prisma migrate deploy --schema=prisma/test-migrations/schema.test.prisma && jest --runInBand",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:ci": "cross-env INSENSITIVE_SEARCH=false npx prisma generate --schema=prisma/test-migrations/schema.test.prisma && cross-env INSENSITIVE_SEARCH=false npx prisma migrate deploy --schema=prisma/test-migrations/schema.test.prisma && cross-env INSENSITIVE_SEARCH=false jest --runInBand"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

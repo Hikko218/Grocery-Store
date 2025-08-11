@@ -21,7 +21,8 @@ model Product {
   id          Int         @id @default(autoincrement())
   name        String
   brand       String?
-  category    String?
+  description String?
+  category    String
   quantity    String?
   packaging   String?
   country     String?
