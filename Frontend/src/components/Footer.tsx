@@ -1,3 +1,5 @@
+// Renders the shop footer with brand info, navigation links, help, newsletter signup, payment badges, and legal info.
+// Handles newsletter form submission and displays copyright.
 "use client";
 
 import Link from "next/link";

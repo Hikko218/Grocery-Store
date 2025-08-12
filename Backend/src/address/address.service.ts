@@ -5,11 +5,13 @@ import { CreateAddressDto } from './dto/create.address.dto';
 import { UpdateAddressDto } from './dto/update.address.dto';
 import { ResponseAddressDto } from './dto/response.address.dto';
 
+// Service for address management and database operations
 @Injectable()
 export class AddressService {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly prisma: PrismaService) {}
 
+  // Helper: Convert address entity to response DTO
   private toResponse(a: {
     id: number;
     userId: number;
@@ -41,6 +43,7 @@ export class AddressService {
     };
   }
 
+  // Get all addresses for a user
   async findAllByUser(userId: number): Promise<ResponseAddressDto[]> {
     const list = await this.prisma.address.findMany({
       where: { userId: Number(userId) },
@@ -49,6 +52,7 @@ export class AddressService {
     return list.map((a) => this.toResponse(a));
   }
 
+  // Create a new address for user
   async create(
     userId: number,
     dto: CreateAddressDto,
@@ -97,6 +101,7 @@ export class AddressService {
     return this.toResponse(created);
   }
 
+  // Update address by id and userId
   async update(
     id: number,
     userId: number,
@@ -153,6 +158,7 @@ export class AddressService {
     return this.toResponse(updated);
   }
 
+  // Delete address by id and userId
   async remove(id: number, userId: number): Promise<{ success: boolean }> {
     const existing = await this.prisma.address.findFirst({
       where: { id: Number(id), userId: Number(userId) },
@@ -166,6 +172,7 @@ export class AddressService {
 
   // Zusätzliche Helfer für Profile-Page
 
+  // Get default address for user and type
   async getDefault(
     userId: number,
     type: AddressType,
@@ -177,6 +184,7 @@ export class AddressService {
     return a ? this.toResponse(a) : null;
   }
 
+  // Set address as default for user
   async setDefault(userId: number, id: number): Promise<ResponseAddressDto> {
     const existing = await this.prisma.address.findFirst({
       where: { id: Number(id), userId: Number(userId) },

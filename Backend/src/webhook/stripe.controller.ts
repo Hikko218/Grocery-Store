@@ -11,8 +11,10 @@ import type { Request } from 'express';
 import Stripe from 'stripe';
 import { PaymentService } from '../payment/payment.service';
 
+// Initialize Stripe client with secret key from environment
 const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY ?? '');
 
+// Helper to verify and construct Stripe event from webhook payload
 function toEvent(raw: Buffer, sig: string, secret: string): Stripe.Event {
   try {
     return stripeClient.webhooks.constructEvent(raw, sig, secret);
@@ -21,6 +23,7 @@ function toEvent(raw: Buffer, sig: string, secret: string): Stripe.Event {
   }
 }
 
+// Helper to extract PaymentIntent object from event payload
 function getPaymentIntent(obj: unknown): Stripe.PaymentIntent {
   if (
     obj &&
@@ -35,9 +38,11 @@ function getPaymentIntent(obj: unknown): Stripe.PaymentIntent {
 
 @Controller('webhook/stripe')
 export class StripeWebhookController {
+  // Inject PaymentService for handling payment events
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly payments: PaymentService) {}
 
+  // Handle Stripe webhook POST requests
   @Post()
   @HttpCode(200)
   async handle(
@@ -51,8 +56,10 @@ export class StripeWebhookController {
     const raw = req.rawBody;
     if (!raw) throw new BadRequestException('Missing raw body');
 
+    // Parse and verify Stripe event
     const event = toEvent(raw, sig, secret);
 
+    // Handle relevant Stripe event types
     switch (event.type) {
       case 'payment_intent.succeeded': {
         const pi = getPaymentIntent(event.data.object);

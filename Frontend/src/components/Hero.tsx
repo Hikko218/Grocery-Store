@@ -1,3 +1,5 @@
+// Displays the main hero section with background image, shop banner, and call-to-action button.
+// Shows a featured products banner below the hero.
 import React from "react";
 import Image from "next/image";
 import ProductsBanner from "./ProductsBanner";

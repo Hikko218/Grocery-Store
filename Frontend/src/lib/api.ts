@@ -1,3 +1,4 @@
+// Wrapper for HTTP requests to the backend API
 const BASE = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

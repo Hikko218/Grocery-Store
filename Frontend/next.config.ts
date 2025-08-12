@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:3000/:path*",
+        destination:
+          process.env.NODE_ENV === "development"
+            ? "http://localhost:3000/:path*"
+            : "https://notes-web-app-q32v.onrender.com/:path*",
       },
     ];
   },

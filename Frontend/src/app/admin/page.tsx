@@ -1,3 +1,4 @@
+// Admin dashboard page. Allows searching users and orders, managing products, and updating order/product data.
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -51,7 +52,7 @@ type AdminUser = {
 export default function AdminPage() {
   const API = useMemo(() => process.env.NEXT_PUBLIC_API_URL ?? "/api", []);
 
-  // Orders via User
+  // User and order management state
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [userQuery, setUserQuery] = useState<{
     userId?: string;
@@ -61,7 +62,7 @@ export default function AdminPage() {
   const [loadingUser, setLoadingUser] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
-  // Products with search/filter/sort
+  // Product management state
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productQ, setProductQ] = useState<string>("");
@@ -80,7 +81,7 @@ export default function AdminPage() {
     description: "",
   });
 
-  // Helpers
+  // Loads user info and orders by user ID or email
   const loadUser = useCallback(async () => {
     setLoadingUser(true);
     setSelectedUser(null);
@@ -88,7 +89,7 @@ export default function AdminPage() {
     try {
       let u: AdminUser | null = null;
 
-      // 1) per ID
+      // Search by user ID
       if (userQuery.userId && userQuery.userId.trim()) {
         const res = await fetch(
           `${API}/user/id/${encodeURIComponent(
@@ -111,7 +112,7 @@ export default function AdminPage() {
         }
       }
 
-      // 2) per E-Mail (Fallback)
+      // Search by email if not found by ID
       if (!u && userQuery.email && userQuery.email.trim()) {
         const email = userQuery.email.trim();
         const res = await fetch(
@@ -145,12 +146,12 @@ export default function AdminPage() {
     }
   }, [API, userQuery]);
 
+  // Loads products with filters and sorting
   const loadProducts = useCallback(async () => {
     setLoadingProducts(true);
     const params = new URLSearchParams();
     if (productQ.trim()) params.set("searchTerm", productQ.trim());
     if (productCategory.trim()) params.set("category", productCategory.trim());
-    // Brand-Filter: falls dein /products das nicht unterstützt, ignoriere ihn serverseitig
     if (productBrand.trim()) params.set("brand", productBrand.trim());
     params.set("sortBy", sortBy);
     params.set("sortOrder", sortOrder);
@@ -167,7 +168,7 @@ export default function AdminPage() {
     void loadProducts();
   }, [loadProducts]);
 
-  // Order actions
+  // Updates order payment status
   const updateOrderStatus = useCallback(
     async (id: number, paymentStatus: OrderRow["paymentStatus"]) => {
       const res = await fetch(`${API}/order/${id}`, {
@@ -176,11 +177,12 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ paymentStatus }),
       });
-      if (res.ok && selectedUser) await loadUser(); // lädt User inkl. orders neu
+      if (res.ok && selectedUser) await loadUser();
     },
     [API, loadUser, selectedUser]
   );
 
+  // Deletes an order
   const deleteOrder = useCallback(
     async (id: number) => {
       const res = await fetch(`${API}/order/${id}`, {
@@ -192,7 +194,7 @@ export default function AdminPage() {
     [API, loadUser, selectedUser]
   );
 
-  // Product actions
+  // Creates a new product
   const createProduct = useCallback(async () => {
     const desc = (newProduct.description ?? "").trim();
     const res = await fetch(`${API}/products`, {
@@ -223,6 +225,7 @@ export default function AdminPage() {
     }
   }, [API, newProduct, loadProducts]);
 
+  // Updates a product
   const updateProduct = useCallback(
     async (p: ProductRow) => {
       const res = await fetch(
@@ -246,6 +249,7 @@ export default function AdminPage() {
     [API, loadProducts]
   );
 
+  // Deletes a product
   const deleteProduct = useCallback(
     async (productId: string) => {
       const res = await fetch(
@@ -266,7 +270,7 @@ export default function AdminPage() {
         Admin Dashboard
       </h1>
 
-      {/* User → Orders */}
+      {/* User and order management section */}
       <section className="mb-8 rounded-md border border-slate-200 p-4">
         <h2 className="mb-3 text-lg font-semibold">Find user orders</h2>
         <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
@@ -399,7 +403,7 @@ export default function AdminPage() {
         </div>
       </section>
 
-      {/* Products */}
+      {/* Product management section */}
       <section className="rounded-md border border-slate-200 p-4">
         <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_1fr_auto_auto] sm:items-end">
           <label className="grid gap-1">
@@ -462,7 +466,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Create */}
+        {/* Create product section */}
         <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-6">
           <input
             className="rounded border border-slate-300 px-2 py-1 text-sm"
@@ -532,7 +536,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* List */}
+        {/* Product list */}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>

@@ -1,3 +1,5 @@
+// Banner component for displaying a grid of products with sorting, searching, and load more functionality.
+// Integrates with cart context to add products to cart.
 "use client";
 import ProductCard from "@/components/ProductCard";
 import { useCart } from "@/context/CartContext";

@@ -10,6 +10,7 @@ import { AppModule } from '../app.module';
 import * as bcrypt from 'bcrypt';
 import * as cookieParser from 'cookie-parser';
 
+// End-to-end tests for OrderController API endpoints
 describe('OrderController (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;

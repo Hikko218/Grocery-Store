@@ -28,11 +28,15 @@ function toOrderResponse(o: OrderModel): ResponseOrderDto {
   };
 }
 
+// Service for order management and database operations
 @Injectable()
 export class OrderService {
+  // Inject PrismaService for DB access
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly prisma: PrismaService) {}
 
+  // Helper: Convert Order model to response DTO
+  // Create a new order from cart data
   async create(data: CreateOrderDto): Promise<ResponseOrderDto> {
     // Cart-Total (oder 0, falls kein Cart vorhanden)
     const cart = await this.prisma.cart.findUnique({
@@ -57,6 +61,7 @@ export class OrderService {
     return toOrderResponse(order);
   }
 
+  // Get all orders for a user
   async findByUser(userId: number): Promise<ResponseOrderDto[]> {
     const orders = await this.prisma.order.findMany({
       where: { userId },
@@ -65,6 +70,7 @@ export class OrderService {
     return orders.map(toOrderResponse);
   }
 
+  // Update an existing order
   async update(
     orderId: number,
     data: UpdateOrderDto,
@@ -90,6 +96,7 @@ export class OrderService {
     return toOrderResponse(order);
   }
 
+  // Delete an order by ID
   async delete(orderId: number): Promise<{ success: boolean }> {
     const exists = await this.prisma.order.findUnique({
       where: { id: orderId },
@@ -99,7 +106,7 @@ export class OrderService {
     return { success: true };
   }
 
-  // Compat-Wrapper für Tests
+  // Test compatibility wrappers for create, get, update, delete
   async createOrder(userId: number): Promise<ResponseOrderDto> {
     const cart = await this.prisma.cart.findUnique({
       where: { userId },

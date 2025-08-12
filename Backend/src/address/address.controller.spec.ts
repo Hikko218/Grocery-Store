@@ -23,6 +23,7 @@ type ResponseAddress = {
   createdAt: string;
 };
 
+// End-to-end tests for AddressController API endpoints
 describe('AddressController (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;

@@ -1,3 +1,4 @@
+// Provides global cart state and actions for adding, removing, updating, and syncing cart items with the backend
 "use client";
 
 import React, {
@@ -7,7 +8,7 @@ import React, {
   useMemo,
   useState,
   useCallback,
-  useRef, // hinzugefügt
+  useRef,
 } from "react";
 import { getAuthStatus } from "@/lib/auth";
 import { ensureCart, recalculateCart } from "@/lib/cart";
@@ -15,7 +16,7 @@ import {
   setServerCartItem,
   deleteServerCartItem,
   clearServerCartItems,
-  addCartItems, // hinzugefügt
+  addCartItems,
 } from "@/lib/cartitems";
 import { usePathname } from "next/navigation";
 
@@ -40,6 +41,7 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 const STORAGE_KEY = "cart";
 
+// Loads cart items from localStorage, filtering out invalid entries
 function loadInitial(): CartItem[] {
   if (typeof window === "undefined") return [];
   try {
@@ -60,33 +62,33 @@ function loadInitial(): CartItem[] {
   }
 }
 
+// CartProvider manages cart state, local persistence, and backend sync for authenticated users
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const [items, setItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const migratedRef = useRef(false); // verhindert Doppel-Ausführung im StrictMode
+  const migratedRef = useRef(false);
 
+  // Load cart from localStorage on mount, except on profile page
   useEffect(() => {
-    // Skip auto-load on profile; keeps header from fetching cart there.
     if (pathname === "/profile") return;
-
     const initial = loadInitial();
     setItems(initial);
     setLoaded(true);
   }, [pathname]);
 
-  // Items in LocalStorage persistieren
+  // Persist cart items to localStorage whenever items change
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch {
-      // ignore
+      // ignore storage errors
     }
   }, [items]);
 
-  // Beim ersten Load: eingeloggt? -> Cart sicherstellen, Items anlegen, total neu berechnen
+  // On first load, if user is authenticated, migrate local cart to backend and recalculate totals
   useEffect(() => {
     if (!loaded || migratedRef.current) return;
     let cancelled = false;
@@ -108,9 +110,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           await recalculateCart(cart.id);
         }
       } catch {
-        // optional: log
+        // ignore migration errors
       } finally {
-        migratedRef.current = true; // markiere als erledigt
+        migratedRef.current = true;
       }
     })();
     return () => {
@@ -118,6 +120,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
   }, [loaded, items]);
 
+  // Adds an item to the cart, updating quantity if it already exists, and syncs with backend if authenticated
   const addItem = useCallback(
     (item: Omit<CartItem, "quantity">, qty: number = 1) => {
       let nextQtyCalculated = qty;
@@ -141,13 +144,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           await setServerCartItem(cart.id, item.productId, nextQtyCalculated);
           await recalculateCart(cart.id);
         } catch {
-          // optional: log
+          // ignore backend errors
         }
       })();
     },
     []
   );
 
+  // Removes an item from the cart and deletes it from backend cart if authenticated
   const removeItem = useCallback((productId: string) => {
     setItems((prev) => prev.filter((p) => p.productId !== productId));
 
@@ -159,11 +163,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         await deleteServerCartItem(cart.id, productId);
         await recalculateCart(cart.id);
       } catch {
-        // optional: log
+        // ignore backend errors
       }
     })();
   }, []);
 
+  // Sets the quantity for a cart item, removes if qty <= 0, and syncs with backend
   const setQuantity = useCallback((productId: string, qty: number) => {
     setItems((prev) => {
       const idx = prev.findIndex((p) => p.productId === productId);
@@ -182,11 +187,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         await setServerCartItem(cart.id, productId, qty);
         await recalculateCart(cart.id);
       } catch {
-        // optional: log
+        // ignore backend errors
       }
     })();
   }, []);
 
+  // Clears all items from the cart and backend cart if authenticated
   const clear = useCallback(() => {
     setItems([]);
 
@@ -198,28 +204,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         await clearServerCartItems(cart.id);
         await recalculateCart(cart.id);
       } catch {
-        // optional: log
+        // ignore backend errors
       }
     })();
   }, []);
 
+  // Calculates total item count in the cart
   const count = useMemo(
     () => items.reduce((sum, i) => sum + i.quantity, 0),
     [items]
   );
+  // Calculates total price of all items in the cart
   const total = useMemo(
     () => items.reduce((sum, i) => sum + i.quantity * i.price, 0),
     [items]
   );
 
+  // Memoizes context value to avoid unnecessary re-renders
   const value = useMemo(
     () => ({ items, addItem, removeItem, setQuantity, clear, count, total }),
-    [items, count, total, addItem, removeItem, setQuantity, clear] // deps ergänzt
+    [items, count, total, addItem, removeItem, setQuantity, clear]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
+// Custom hook to access cart context, throws if used outside provider
 export function useCart() {
   const ctx = useContext(CartContext);
   if (!ctx) throw new Error("useCart must be used within CartProvider");

@@ -1,3 +1,4 @@
+// Cart page. Displays all items in the user's cart and allows quantity changes, removal, and checkout.
 "use client";
 
 import { useCart } from "@/context/CartContext";
@@ -11,17 +12,20 @@ export default function CartPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  // Increases quantity for a cart item
   const inc = (id: string, qty: number) => setQuantity(id, qty + 1);
+  // Decreases quantity for a cart item, minimum 1
   const dec = (id: string, qty: number) =>
     setQuantity(id, Math.max(1, qty - 1));
 
+  // Handles checkout: checks authentication, redirects to login if needed
   const handleCheckout = async () => {
     if (items.length === 0 || loading) return;
     setLoading(true);
     try {
       const API_URL =
         process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-      // geschützte Route testen (Cookie wird mitgesendet)
+      // Checks if user is authenticated by calling protected route
       const res = await fetch(`${API_URL}/order/me`, {
         method: "GET",
         credentials: "include",
@@ -31,11 +35,10 @@ export default function CartPage() {
         return;
       }
       if (!res.ok) {
-        // Fallback: zur Login-Seite
         router.push(`/login?next=/checkout`);
         return;
       }
-      // eingeloggt -> weiter zum Checkout
+      // If authenticated, proceed to checkout
       router.push("/checkout");
     } catch {
       router.push(`/login?next=/checkout`);
@@ -48,6 +51,7 @@ export default function CartPage() {
     <div className="mx-auto min-h-[70vh] max-w-5xl px-4 pt-24">
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Your Cart</h1>
 
+      {/* Empty cart message */}
       {items.length === 0 ? (
         <div className="rounded-md border border-slate-200 p-6 text-slate-600">
           Your cart is empty.{" "}
@@ -58,6 +62,7 @@ export default function CartPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
+          {/* Cart items list */}
           <div className="space-y-4">
             {items.map((i) => (
               <div
@@ -85,6 +90,7 @@ export default function CartPage() {
                     € {i.price.toFixed(2)}
                   </div>
                 </div>
+                {/* Quantity controls */}
                 <div className="flex items-center gap-2">
                   <button
                     className="rounded border px-2 py-1 text-slate-700 hover:bg-red-500"
@@ -102,6 +108,7 @@ export default function CartPage() {
                     +
                   </button>
                 </div>
+                {/* Remove item button */}
                 <button
                   className="ml-2 rounded border px-2 py-1 text-red-600 hover:bg-red-500 hover:text-white"
                   onClick={() => removeItem(i.productId)}
@@ -112,6 +119,7 @@ export default function CartPage() {
             ))}
           </div>
 
+          {/* Cart summary and actions */}
           <aside className="h-fit rounded-md border border-slate-200 p-4">
             <div className="mb-2 flex justify-between">
               <span className="text-slate-700">Subtotal</span>

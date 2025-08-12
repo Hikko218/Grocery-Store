@@ -1,3 +1,4 @@
+// Functions for cart management and syncing with backend
 export type SyncItem = { productId: string; quantity: number };
 export type SyncResponse = {
   id: number;
@@ -34,12 +35,14 @@ async function createCart(userId: number): Promise<ResponseCartDto> {
   return res.json();
 }
 
+// Ensures a cart exists for the user, creates one if not
 export async function ensureCart(userId: number): Promise<ResponseCartDto> {
   const existing = await getCartByUserId(userId);
   if (existing) return existing;
   return createCart(userId);
 }
 
+// Recalculates the total price of a cart
 export async function recalculateCart(
   cartId: number
 ): Promise<{ total: number }> {
@@ -52,6 +55,7 @@ export async function recalculateCart(
   return res.json();
 }
 
+// Syncs local cart items with the server cart
 export async function syncCart(items: SyncItem[]): Promise<SyncResponse> {
   const res = await fetch("/api/cart/sync", {
     method: "PUT",

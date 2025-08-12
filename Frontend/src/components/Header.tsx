@@ -1,3 +1,5 @@
+// Renders the shop header with navigation, search bar, category dropdown, cart icon, and user menu.
+// Handles search, category selection, and user authentication actions.
 "use client";
 
 import Link from "next/link";

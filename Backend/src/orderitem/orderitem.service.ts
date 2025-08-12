@@ -6,13 +6,14 @@ import { ResponseOrderItemDto } from './dto/response.orderitem.dto';
 import type { OrderItem } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 
+// Service for order item management and database operations
 @Injectable()
 export class OrderItemService {
   // Inject PrismaService for DB access
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly prisma: PrismaService) {}
 
-  // Helper function for mapping DB entity to response DTO
+  // Helper: Map DB entity to response DTO
   private toResponse(item: OrderItem): ResponseOrderItemDto {
     return {
       id: item.id,

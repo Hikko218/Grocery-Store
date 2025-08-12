@@ -1,4 +1,4 @@
-// app/providers.tsx
+// Provides React Query context and devtools for the app
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

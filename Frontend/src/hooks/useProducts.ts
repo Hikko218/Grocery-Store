@@ -1,3 +1,4 @@
+// Custom React Query hooks for fetching products and product details
 "use client";
 
 import { useQuery } from "@tanstack/react-query";

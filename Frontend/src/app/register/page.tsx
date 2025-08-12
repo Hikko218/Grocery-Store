@@ -1,3 +1,4 @@
+// Registration page. Handles user registration and automatic login after signup.
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
@@ -7,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Determines redirect URL after registration
   const nextUrl = useMemo(() => {
     const n = searchParams?.get("next") || searchParams?.get("returnUrl");
     return n && n.startsWith("/") ? n : "/";
@@ -21,6 +23,7 @@ export default function RegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
       router.replace(nextUrl);
@@ -30,6 +33,7 @@ export default function RegisterPage() {
   const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
   const AUTH_LOGIN_URL = `${API_BASE}/auth/login`;
 
+  // Handles registration form submission and automatic login
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -67,7 +71,7 @@ export default function RegisterPage() {
         throw new Error(msg);
       }
 
-      // Direkt nach Registrierung einloggen
+      // Automatically log in after registration
       const loginRes = await fetch(AUTH_LOGIN_URL, {
         method: "POST",
         credentials: "include",
@@ -75,7 +79,6 @@ export default function RegisterPage() {
         body: JSON.stringify({ email, password }),
       });
       if (!loginRes.ok) {
-        // Wenn Login fehlschlägt, Fehler anzeigen statt still weiterzuleiten
         let msg = `Login after register failed (${loginRes.status})`;
         try {
           const ct = loginRes.headers.get("content-type") || "";
@@ -105,6 +108,7 @@ export default function RegisterPage() {
     <div className="mx-auto max-w-md px-4 pt-24">
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Register</h1>
 
+      {/* Registration form */}
       <form
         onSubmit={onSubmit}
         className="space-y-4 rounded-md border border-slate-200 p-4"

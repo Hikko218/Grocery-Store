@@ -16,11 +16,12 @@ interface AuthenticatedRequest extends Request {
   user?: User;
 }
 
+// Guard to restrict access to admin users
 @Injectable()
 export class AdminGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
+    // Check if user has admin role
     const req = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    // Annahme: req.user ist vom JWT-Guard gesetzt und hat eine "role" Eigenschaft
     if (req.user && req.user.role === 'admin') {
       Logger.log('AdminGuard: access granted');
       return true;

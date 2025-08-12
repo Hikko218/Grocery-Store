@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import * as cookieParser from 'cookie-parser';
 
+// End-to-end tests for UserController API endpoints
 describe('UserController (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -63,9 +64,9 @@ describe('UserController (e2e)', () => {
     success: boolean;
   }
 
+  // Test user creation endpoint
   it('should create a user', async () => {
     const email = `new${Date.now()}@example.com`;
-    // Test user creation endpoint
     const res = await request(app.getHttpServer())
       .post('/user')
       .send({ email, password: 'pw' })
@@ -74,8 +75,8 @@ describe('UserController (e2e)', () => {
     expect(body.email).toBe(email);
   });
 
+  // Test get user by email endpoint
   it('should get user by email', async () => {
-    // Test get user by email endpoint
     const res = await request(app.getHttpServer())
       .get(`/user/${userEmail}`)
       .set('Cookie', userCookie)
@@ -84,8 +85,8 @@ describe('UserController (e2e)', () => {
     expect(body.email).toBe(userEmail);
   });
 
+  // Test get user by id endpoint
   it('should get user by id', async () => {
-    // Test get user by id endpoint
     const res = await request(app.getHttpServer())
       .get(`/user/id/${userId}`)
       .set('Cookie', userCookie)
@@ -94,8 +95,8 @@ describe('UserController (e2e)', () => {
     expect(body.id).toBe(userId);
   });
 
+  // Test update user endpoint
   it('should update user', async () => {
-    // Test update user endpoint
     const res = await request(app.getHttpServer())
       .put(`/user/${userId}`)
       .set('Cookie', userCookie)
@@ -105,8 +106,8 @@ describe('UserController (e2e)', () => {
     expect(body.email).toBe('updated@test.de');
   });
 
+  // Test delete user endpoint
   it('should delete user', async () => {
-    // Test delete user endpoint
     const res = await request(app.getHttpServer())
       .delete(`/user/${userId}`)
       .set('Cookie', userCookie)

@@ -2,15 +2,18 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service';
 
+// Service for payment processing and Stripe integration
 @Injectable()
 export class PaymentService {
   private readonly stripe: Stripe;
 
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly prisma: PrismaService) {
+    // Initialize Stripe client
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '');
   }
 
+  // Ensure Stripe is properly configured
   private ensureStripeConfigured(): void {
     const key = process.env.STRIPE_SECRET_KEY ?? '';
     // Reject obvious placeholder/invalid keys
@@ -24,11 +27,13 @@ export class PaymentService {
     }
   }
 
+  // Convert amount to minor units (e.g. cents)
   private toMinor(amount: unknown): number {
     const n = Number(amount ?? 0);
     return Number.isFinite(n) ? Math.max(0, Math.round(n * 100)) : 0;
   }
 
+  // Ensure Stripe customer exists for user
   private async ensureStripeCustomer(userId: number): Promise<string> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found');
@@ -47,6 +52,7 @@ export class PaymentService {
     return customer.id;
   }
 
+  // Create order and Stripe payment intent
   async createOrderAndIntent(opts: {
     userId: number;
     shipping: {
@@ -144,6 +150,7 @@ export class PaymentService {
     }
   }
 
+  // Apply Stripe payment success to order
   async applyStripeSuccess(pi: Stripe.PaymentIntent): Promise<void> {
     const orderId = Number(pi.metadata?.orderId);
     if (!Number.isFinite(orderId)) return;
@@ -198,6 +205,7 @@ export class PaymentService {
     }
   }
 
+  // Apply Stripe payment failure to order
   async applyStripeFailure(pi: Stripe.PaymentIntent): Promise<void> {
     const orderId = Number(pi.metadata?.orderId);
     if (!Number.isFinite(orderId)) return;

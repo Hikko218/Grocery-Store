@@ -19,13 +19,14 @@ import { ResponseProductDto } from './dto/response.product.dto';
 import { AdminGuard } from '../auth/auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 
+// Controller for product-related API endpoints
 @Controller('products')
 export class ProductsController {
-  // Service injection
+  // Inject ProductsService
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly productsService: ProductsService) {}
 
-  // GET /products/categories
+  // GET /products/categories - Get all product categories
   @Get('categories')
   @HttpCode(200)
   async categories(): Promise<string[]> {
@@ -39,7 +40,7 @@ export class ProductsController {
     }
   }
 
-  // GET /products?searchTerm=salt&sortBy=price&sortOrder=asc
+  // GET /products - Get products by search term, sorting, and pagination
   @Get('/')
   @HttpCode(200)
   async getProducts(
@@ -70,7 +71,7 @@ export class ProductsController {
     }
   }
 
-  // Get /products/productsiD
+  // GET /products/:productId - Get product by productId
   @Get(':productId')
   @HttpCode(200)
   async getProductById(
@@ -89,7 +90,7 @@ export class ProductsController {
     }
   }
 
-  // POST /products
+  // POST /products - Create a new product (admin only)
   @UseGuards(AuthGuard('jwt'), AdminGuard)
   @Post()
   @HttpCode(201)
@@ -106,7 +107,7 @@ export class ProductsController {
     }
   }
 
-  // PUT /products/:productId
+  // PUT /products/:productId - Update product (admin only)
   @UseGuards(AuthGuard('jwt'), AdminGuard)
   @Put(':productId')
   @HttpCode(200)
@@ -124,7 +125,7 @@ export class ProductsController {
     }
   }
 
-  // DELETE /products/:productId
+  // DELETE /products/:productId - Delete product (admin only)
   @UseGuards(AuthGuard('jwt'), AdminGuard)
   @Delete(':productId')
   @HttpCode(200)

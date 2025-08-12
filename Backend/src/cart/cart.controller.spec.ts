@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from '../app.module';
 
+// End-to-end tests for CartController API endpoints
 describe('CartController (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;

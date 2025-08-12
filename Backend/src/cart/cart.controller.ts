@@ -29,6 +29,7 @@ function getUserId(req: AuthReq) {
   return Number(req.user?.id ?? req.user?.userId ?? req.user?.sub);
 }
 
+// Controller for cart-related API endpoints
 @UseGuards(AuthGuard('jwt'))
 @Controller('cart')
 export class CartController {
@@ -39,7 +40,7 @@ export class CartController {
     private readonly prisma: PrismaService,
   ) {}
 
-  // GET /cart?userId=1
+  // GET /cart?userId=1 - Get cart by userId
   @Get()
   @HttpCode(200)
   async getCart(
@@ -58,7 +59,7 @@ export class CartController {
     }
   }
 
-  // POST /cart
+  // POST /cart - Create a new cart
   @Post()
   @HttpCode(201)
   async createCart(@Body() dto: { userId: number }): Promise<ResponseCartDto> {
@@ -72,7 +73,7 @@ export class CartController {
     }
   }
 
-  // POST /cart/:cartId/recalculate
+  // POST /cart/:cartId/recalculate - Recalculate cart total
   @Post(':cartId/recalculate')
   @HttpCode(200)
   async recalculateTotal(
@@ -88,7 +89,7 @@ export class CartController {
     }
   }
 
-  // PUT /cart/:cartId
+  // PUT /cart/:cartId - Update cart
   @Put(':cartId')
   @HttpCode(200)
   async updateCart(
@@ -106,7 +107,7 @@ export class CartController {
     }
   }
 
-  // DELETE /cart/:cartId
+  // DELETE /cart/:cartId - Delete cart
   @Delete(':cartId')
   @HttpCode(200)
   async deleteCart(
@@ -122,6 +123,7 @@ export class CartController {
     }
   }
 
+  // POST /cart/clear - Clear all cart items for user
   @Post('clear')
   @HttpCode(200)
   async clear(@Req() req: AuthReq) {

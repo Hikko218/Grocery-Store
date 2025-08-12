@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrderItemService } from './orderitem.service';
 import { PrismaService } from '../prisma/prisma.service';
 
+// Unit tests for OrderItemService (order item CRUD logic)
 describe('OrderItemService', () => {
   let service: OrderItemService;
   let prisma: PrismaService;

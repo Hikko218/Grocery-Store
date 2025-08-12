@@ -58,12 +58,14 @@ function validateShipping(s: unknown): ShippingDto {
   };
 }
 
+// Controller for payment-related API endpoints
 @UseGuards(AuthGuard('jwt'))
 @Controller('payment')
 export class PaymentController {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly payments: PaymentService) {}
 
+  // POST /payment/create-intent - Create Stripe payment intent and order
   @Post('create-intent')
   @HttpCode(200)
   async createIntent(@Req() req: AuthReq, @Body() body: CreateIntentBody) {

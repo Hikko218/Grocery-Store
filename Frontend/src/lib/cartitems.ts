@@ -1,3 +1,4 @@
+// Functions for managing cart items (add, update, delete, clear)
 export type ResponseCartItemDto = {
   id: number;
   cartId: number;
@@ -26,6 +27,7 @@ function hasStatus(e: unknown): e is { status?: number } {
   return typeof status === "number";
 }
 
+// Fetches all cart items for a given cart
 export async function getCartItems(
   cartId: number
 ): Promise<ResponseCartItemDto[]> {
@@ -36,6 +38,7 @@ export async function getCartItems(
   return res.json();
 }
 
+// Creates a new cart item
 async function createCartItem(
   dto: AddCartItemDto
 ): Promise<ResponseCartItemDto> {
@@ -51,6 +54,7 @@ async function createCartItem(
   return res.json();
 }
 
+// Updates the quantity of a cart item
 async function updateCartItem(
   id: number,
   quantity: number
@@ -70,11 +74,11 @@ async function updateCartItem(
   return res.json();
 }
 
-// Idempotentes Merge: Setzt die Server-Menge auf die lokale Menge (kein Addieren).
+// Adds or updates multiple cart items (idempotent merge)
 export async function addCartItems(items: AddCartItemDto[]): Promise<void> {
   if (!items.length) return;
 
-  // Gruppieren nach cartId und productId, Mengen aufsummieren (falls doppelt in der Liste)
+  // Group items by cartId and productId, sum quantities
   const byCart = new Map<number, Map<string, number>>();
   for (const it of items) {
     if (!it || typeof it.cartId !== "number" || !it.productId) continue;
@@ -99,7 +103,7 @@ export async function addCartItems(items: AddCartItemDto[]): Promise<void> {
         try {
           await createCartItem({ cartId, productId, quantity: qty });
         } catch (err: unknown) {
-          // Rennen: bei 400/409 neu laden und dann aktualisieren
+          // On error 400/409, reload and update instead
           if (!hasStatus(err) || (err.status !== 400 && err.status !== 409)) {
             console.error("createCartItem failed", err);
             continue;
@@ -115,7 +119,7 @@ export async function addCartItems(items: AddCartItemDto[]): Promise<void> {
           }
         }
       } else if (found.quantity !== qty) {
-        // vorhanden -> Menge auf lokalen Stand setzen
+        // If exists, update quantity to match local
         try {
           await updateCartItem(found.id, qty);
         } catch (err: unknown) {
@@ -126,6 +130,7 @@ export async function addCartItems(items: AddCartItemDto[]): Promise<void> {
   }
 }
 
+// Deletes a cart item by its ID
 async function deleteCartItemById(id: number): Promise<{ success: boolean }> {
   const res = await fetch(`/api/cartitem/${id}`, {
     method: "DELETE",
@@ -136,7 +141,7 @@ async function deleteCartItemById(id: number): Promise<{ success: boolean }> {
 }
 
 /**
- * Setzt die Server-Menge auf qty (0 => löschen). Idempotent.
+ * Sets the server quantity for a cart item (qty 0 = delete). Idempotent.
  */
 export async function setServerCartItem(
   cartId: number,
@@ -157,7 +162,7 @@ export async function setServerCartItem(
 }
 
 /**
- * Löscht ein Item (falls vorhanden).
+ * Deletes a cart item by cartId and productId if it exists.
  */
 export async function deleteServerCartItem(
   cartId: number,
@@ -169,7 +174,7 @@ export async function deleteServerCartItem(
 }
 
 /**
- * Löscht alle CartItems eines Carts.
+ * Deletes all items from a cart.
  */
 export async function clearServerCartItems(cartId: number): Promise<void> {
   const existing = await getCartItems(cartId);

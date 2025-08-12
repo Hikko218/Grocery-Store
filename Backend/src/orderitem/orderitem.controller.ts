@@ -18,13 +18,14 @@ import { UpdateOrderItemDto } from './dto/update.orderitem.dto';
 import { ResponseOrderItemDto } from './dto/response.orderitem.dto';
 import { AuthGuard } from '@nestjs/passport';
 
+// Controller for order item-related API endpoints
 @UseGuards(AuthGuard('jwt'))
 @Controller('orderitem')
 export class OrderItemController {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly orderItemService: OrderItemService) {}
 
-  // GET /orderitems/:orderId
+  // GET /orderitems/:orderId - Get all order items for an order
   @Get(':orderId')
   @HttpCode(200)
   async getOrderItems(
@@ -43,7 +44,7 @@ export class OrderItemController {
     }
   }
 
-  // POST /orderitems
+  // POST /orderitems - Create a new order item
   @Post()
   @HttpCode(201)
   async createOrderItem(
@@ -59,7 +60,7 @@ export class OrderItemController {
     }
   }
 
-  // PUT /orderitems/:orderItemId
+  // PUT /orderitems/:orderItemId - Update an order item
   @Put(':orderItemId')
   @HttpCode(200)
   async updateOrderItem(
@@ -79,7 +80,7 @@ export class OrderItemController {
     }
   }
 
-  // DELETE /orderitems/:orderItemId
+  // DELETE /orderitems/:orderItemId - Delete an order item
   @Delete(':orderItemId')
   @HttpCode(200)
   async deleteOrderItem(

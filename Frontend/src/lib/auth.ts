@@ -1,3 +1,4 @@
+// Utility for checking authentication status of the current user
 export type AuthStatus = {
   isAuthenticated: boolean;
   userId?: number;

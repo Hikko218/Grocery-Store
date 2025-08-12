@@ -28,6 +28,7 @@ function getUserId(req: AuthReq) {
   return Number(req.user?.id ?? req.user?.userId ?? req.user?.sub);
 }
 
+// Controller for order-related API endpoints
 @UseGuards(AuthGuard('jwt'))
 @Controller('order')
 export class OrderController {
@@ -38,7 +39,7 @@ export class OrderController {
     private readonly prisma: PrismaService,
   ) {}
 
-  // POST /order
+  // POST /order - Create a new order
   @Post()
   @HttpCode(201)
   async create(@Body() dto: CreateOrderDto): Promise<ResponseOrderDto> {
@@ -55,7 +56,7 @@ export class OrderController {
     }
   }
 
-  // GET /order/me
+  // GET /order/me - Get orders for authenticated user
   @Get('me')
   @HttpCode(200)
   async listMy(@Req() req: AuthReq) {
@@ -89,7 +90,7 @@ export class OrderController {
     }));
   }
 
-  // PUT /order/:orderId
+  // PUT /order/:orderId - Update an order
   @Put(':orderId')
   @HttpCode(200)
   async update(
@@ -109,7 +110,7 @@ export class OrderController {
     }
   }
 
-  // DELETE /order/:orderId
+  // DELETE /order/:orderId - Delete an order
   @Delete(':orderId')
   @HttpCode(200)
   async remove(

@@ -6,36 +6,16 @@ import { ResponseUserDto } from './dto/response.user.dto';
 import { User as UserModel, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
-type OrderItemResponse = {
-  id: number;
-  quantity: number;
-  price: number;
-  product?: {
-    id: number;
-    name: string;
-    price: number;
-    imageUrl?: string | null;
-  } | null;
-};
-type OrderResponse = {
-  id: number;
-  userId: number;
-  createdAt: string;
-  paymentStatus: string;
-  totalPrice: number;
-  items: OrderItemResponse[];
-};
+// Service for user management and user-related database operations
 
-type IncludedOrder = Prisma.OrderGetPayload<{
-  include: { items: { include: { product: true } } };
-}>;
-
+// Helper: Format date to ISO string
 function iso(d: Date | string): string {
   return d instanceof Date
     ? d.toISOString()
     : new Date(String(d)).toISOString();
 }
 
+// Helper: Convert order data to response DTO
 function toOrderResponse(o: IncludedOrder): OrderResponse {
   return {
     id: o.id,
@@ -60,6 +40,7 @@ function toOrderResponse(o: IncludedOrder): OrderResponse {
   };
 }
 
+// Helper: Convert user data to response DTO
 function toUserResponse(
   u: UserModel,
   orders?: OrderResponse[],
@@ -81,12 +62,37 @@ function toUserResponse(
   };
 }
 
+type OrderItemResponse = {
+  id: number;
+  quantity: number;
+  price: number;
+  product?: {
+    id: number;
+    name: string;
+    price: number;
+    imageUrl?: string | null;
+  } | null;
+};
+type OrderResponse = {
+  id: number;
+  userId: number;
+  createdAt: string;
+  paymentStatus: string;
+  totalPrice: number;
+  items: OrderItemResponse[];
+};
+
+type IncludedOrder = Prisma.OrderGetPayload<{
+  include: { items: { include: { product: true } } };
+}>;
+
 @Injectable()
+// Provides user CRUD operations and order retrieval
 export class UserService {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly prisma: PrismaService) {}
 
-  // Create user with hashed password
+  // Create a new user with hashed password
   async create(data: CreateUserDto): Promise<ResponseUserDto> {
     const hashedPassword: string = await bcrypt.hash(data.password, 10);
     const user = await this.prisma.user.create({
@@ -102,7 +108,7 @@ export class UserService {
     return toUserResponse(user);
   }
 
-  // Get user by email (optional: include orders)
+  // Get user by email, optionally including orders
   async getUserbyEmail(
     email: string,
     opts?: { includeOrders?: boolean },
@@ -126,7 +132,7 @@ export class UserService {
     return user ? toUserResponse(user) : null;
   }
 
-  // Get user by id (optional: include orders)
+  // Get user by ID, optionally including orders
   async findById(
     id: number,
     opts?: { includeOrders?: boolean },
@@ -151,7 +157,7 @@ export class UserService {
     return toUserResponse(user);
   }
 
-  // Update user info
+  // Update user information
   async update(id: number, data: UpdateUserDto): Promise<ResponseUserDto> {
     const exists = await this.prisma.user.findUnique({ where: { id } });
     if (!exists) throw new NotFoundException('User not found');
@@ -174,7 +180,7 @@ export class UserService {
     return toUserResponse(user);
   }
 
-  // Delete user
+  // Delete user by ID
   async delete(id: number): Promise<{ success: boolean }> {
     const exists = await this.prisma.user.findUnique({ where: { id } });
     if (!exists) throw new NotFoundException('User not found');
@@ -182,7 +188,7 @@ export class UserService {
     return { success: true };
   }
 
-  // Compat-Wrapper für Tests
+  // Test compatibility wrappers
   async createUser(data: CreateUserDto): Promise<ResponseUserDto> {
     return this.create(data);
   }

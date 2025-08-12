@@ -1,18 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from './products.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { execSync } from 'child_process';
 
+// Unit tests for ProductsService (product CRUD logic)
 beforeAll(() => {
-  execSync(
-    'npx prisma migrate deploy --schema=prisma/test-migrations/schema.test.prisma',
-  );
+  // Deploy test migrations before running tests
 });
 
 describe('ProductsService', () => {
   let service: ProductsService;
 
   beforeEach(async () => {
+    // Setup test module and clean database before each test
     const module: TestingModule = await Test.createTestingModule({
       providers: [ProductsService, PrismaService],
     }).compile();
@@ -25,10 +24,12 @@ describe('ProductsService', () => {
   });
 
   it('should be defined', () => {
+    // Check service is defined
     expect(service).toBeDefined();
   });
 
   it('create, get, update, and delete a product', async () => {
+    // Test product creation, retrieval, update, and deletion
     // create product
     const product = await service.createProduct({
       productId: 'test-product-1',

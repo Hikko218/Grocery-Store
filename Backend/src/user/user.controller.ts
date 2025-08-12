@@ -20,11 +20,13 @@ import { UpdateUserDto } from './dto/update.user.dto';
 import { ResponseUserDto } from './dto/response.user.dto';
 import { AuthGuard } from '@nestjs/passport';
 
+// Controller for user-related API endpoints
 @Controller('user')
 export class UserController {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly userService: UserService) {}
 
+  // Create a new user
   @Post()
   @HttpCode(201)
   async create(@Body() dto: CreateUserDto): Promise<ResponseUserDto> {
@@ -41,7 +43,7 @@ export class UserController {
     }
   }
 
-  // id-Route vor Email-Route
+  // Get user by ID (JWT required)
   @UseGuards(AuthGuard('jwt'))
   @Get('id/:id')
   @HttpCode(200)
@@ -70,6 +72,7 @@ export class UserController {
     }
   }
 
+  // Get user by email (JWT required)
   @UseGuards(AuthGuard('jwt'))
   @Get(':email')
   @HttpCode(200)
@@ -103,6 +106,7 @@ export class UserController {
     }
   }
 
+  // Update user by ID (JWT required)
   @UseGuards(AuthGuard('jwt'))
   @Put(':id')
   @HttpCode(200)
@@ -123,6 +127,7 @@ export class UserController {
     }
   }
 
+  // Delete user by ID (JWT required)
   @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   @HttpCode(200)

@@ -32,13 +32,14 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
+// Controller for address-related API endpoints
 @UseGuards(AuthGuard('jwt'))
 @Controller('address')
 export class AddressController {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly addressService: AddressService) {}
 
-  // Helfer zum sicheren Lesen der UserId
+  // Helper to safely read userId from request
   private getUserId(req: AuthenticatedRequest): number {
     const u = req.user;
     const userId = u?.sub ?? u?.userId ?? u?.id;
@@ -46,6 +47,7 @@ export class AddressController {
     return Number(userId);
   }
 
+  // GET /address - Get all addresses for authenticated user
   @Get()
   @HttpCode(200)
   async findAll(
@@ -66,6 +68,7 @@ export class AddressController {
     }
   }
 
+  // POST /address - Create a new address for user
   @Post()
   @HttpCode(201)
   async create(
@@ -85,6 +88,7 @@ export class AddressController {
     }
   }
 
+  // PATCH /address/:id - Update address by id
   @Patch(':id')
   @HttpCode(200)
   async update(
@@ -105,6 +109,7 @@ export class AddressController {
     }
   }
 
+  // DELETE /address/:id - Delete address by id
   @Delete(':id')
   @HttpCode(200)
   async remove(

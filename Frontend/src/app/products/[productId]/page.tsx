@@ -1,3 +1,4 @@
+// Product details page. Fetches product data and renders product details.
 import ProductDetails from "@/components/ProductDetails";
 import { fetchProductById, type Product } from "@/lib/products";
 
@@ -16,6 +17,7 @@ export default async function ProductDetailsPage({
   );
 }
 
+// Generates metadata for the product details page (title).
 export async function generateMetadata({
   params,
 }: {

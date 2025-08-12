@@ -1,3 +1,4 @@
+// Profile page. Displays user info, allows editing account and addresses, and shows order history.
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
@@ -13,6 +14,7 @@ import type {
   UpdateAddressPayload,
 } from "@/types/address";
 
+// Helper functions for parsing user and order data
 type MaybeAuthUser = {
   id?: number | string;
   userId?: number | string;
@@ -54,6 +56,7 @@ function getOrderStatus(o: unknown): string {
   return s || "UNKNOWN";
 }
 
+// Renders a badge for order status
 function StatusBadge({ status }: { status: string }) {
   const s = status.toUpperCase();
   const cls =
@@ -73,6 +76,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+// Main profile page component
 export default function ProfilePage() {
   const { user: authUser, loading: authLoading } = useAuth();
   const userId = getEffectiveUserId(authUser as MaybeAuthUser);
@@ -104,6 +108,7 @@ export default function ProfilePage() {
 
   const [pwConfirm, setPwConfirm] = useState<string>("");
 
+  // Memoized default addresses
   const defaultShipping = useMemo(
     () => addresses.find((a) => a.type === "SHIPPING" && a.isDefault),
     [addresses]
@@ -113,6 +118,7 @@ export default function ProfilePage() {
     [addresses]
   );
 
+  // Loads user, orders, and addresses on mount
   useEffect(() => {
     if (authLoading) return;
     let cancelled = false;
@@ -123,10 +129,10 @@ export default function ProfilePage() {
 
         const userPromise: Promise<ResponseUser | null> =
           typeof userId === "number"
-            ? userService.getById(userId) // GET /api/user/id/:id
+            ? userService.getById(userId)
             : Promise.resolve(null);
-        const ordersPromise = orderService.listMy(); // GET /api/order
-        const addrPromise = addressService.list(); // GET /api/address
+        const ordersPromise = orderService.listMy();
+        const addrPromise = addressService.list();
 
         const [uRes, oRes, aRes] = await Promise.allSettled([
           userPromise,
@@ -165,6 +171,7 @@ export default function ProfilePage() {
     };
   }, [authLoading, userId]);
 
+  // Handles user info update form submission
   async function saveUser(e: React.FormEvent) {
     e.preventDefault();
     if (typeof userId !== "number") return;
@@ -177,11 +184,11 @@ export default function ProfilePage() {
     }
     const updated = await userService.update(userId, userForm);
     setUser(updated);
-    // Passwort-Felder nach erfolgreichem Update leeren
     setUserForm((s) => ({ ...s, password: "" }));
     setPwConfirm("");
   }
 
+  // Handles address creation form submission
   async function addAddress(e: React.FormEvent) {
     e.preventDefault();
     const created = await addressService.create(addrForm);
@@ -199,11 +206,13 @@ export default function ProfilePage() {
     });
   }
 
+  // Updates an address in backend and local state
   async function updateAddress(id: number, patch: UpdateAddressPayload) {
     const updated = await addressService.update(id, patch);
     setAddresses((prev) => prev.map((a) => (a.id === id ? updated : a)));
   }
 
+  // Removes an address from backend and local state
   async function removeAddress(id: number) {
     await addressService.remove(id);
     setAddresses((prev) => prev.filter((a) => a.id !== id));
@@ -211,6 +220,7 @@ export default function ProfilePage() {
 
   const [expanded, setExpanded] = useState<number | null>(null);
 
+  // Renders profile, addresses, and order history
   return (
     <div className="mx-auto max-w-6xl px-4 pt-24">
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Your Profile</h1>
@@ -226,7 +236,7 @@ export default function ProfilePage() {
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
           <div className="space-y-6">
-            {/* Account */}
+            {/* Account section */}
             <section className="rounded-md border border-slate-200 p-6">
               <h2 className="mb-4 text-xl font-semibold text-slate-900">
                 Account
@@ -313,7 +323,7 @@ export default function ProfilePage() {
               </form>
             </section>
 
-            {/* Addresses */}
+            {/* Addresses section */}
             <section className="rounded-md border border-slate-200 p-6">
               <h2 className="mb-4 text-xl font-semibold text-slate-900">
                 Addresses
@@ -496,7 +506,7 @@ export default function ProfilePage() {
             </section>
           </div>
 
-          {/* Orders summary */}
+          {/* Orders summary section */}
           <aside className="h-fit rounded-md border border-slate-200 p-4">
             <h2 className="mb-3 text-xl font-semibold text-slate-900">
               Orders

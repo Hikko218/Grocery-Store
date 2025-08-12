@@ -1,3 +1,4 @@
+// Checkout page. Handles address selection, payment via Stripe, and order creation.
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -36,6 +37,7 @@ type Shipping = {
   phone?: string;
 };
 
+// Stripe checkout form. Handles address selection, payment intent, and payment confirmation.
 function CheckoutForm() {
   const stripe = useStripe();
   const elements = useElements();
@@ -59,7 +61,7 @@ function CheckoutForm() {
     phone: "",
   });
 
-  // Helpers
+  // Helper to apply selected address to shipping form
   function applyAddress(a: Address) {
     setShipping({
       name: a.name ?? "",
@@ -72,7 +74,7 @@ function CheckoutForm() {
     });
   }
 
-  // Load addresses
+  // Load user's addresses from backend
   useEffect(() => {
     const load = async () => {
       try {
@@ -91,13 +93,13 @@ function CheckoutForm() {
           applyAddress(def);
         }
       } catch {
-        // ignore
+        // ignore errors
       }
     };
     void load();
   }, [API]);
 
-  // Save or update address
+  // Save or update address in backend
   const saveAddress = async () => {
     setError(null);
     try {
@@ -132,7 +134,7 @@ function CheckoutForm() {
         const t = await res.text();
         throw new Error(t || "Cannot save address");
       }
-      // refresh list
+      // Refresh address list after save
       const listRes = await fetch(`${API}/address`, { credentials: "include" });
       if (listRes.ok) {
         const list = (await listRes.json()) as Address[];
@@ -152,6 +154,7 @@ function CheckoutForm() {
     }
   };
 
+  // Determines if payment can be submitted
   const canPay =
     !submitting &&
     !!stripe &&
@@ -162,6 +165,7 @@ function CheckoutForm() {
     shipping.city.trim().length > 1 &&
     /^[A-Z]{2}$/.test(shipping.country.trim().toUpperCase());
 
+  // Handles payment submission and Stripe payment intent
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!stripe || !elements) return;
@@ -390,6 +394,7 @@ function CheckoutForm() {
   );
 }
 
+// Main checkout page. Wraps the Stripe Elements provider around the checkout form.
 export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 pt-24">

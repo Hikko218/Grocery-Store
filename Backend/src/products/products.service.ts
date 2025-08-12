@@ -5,6 +5,9 @@ import { CreateProductDto } from './dto/create.product.dto';
 import { ResponseProductDto } from './dto/response.product.dto';
 import { type Product, Prisma } from '@prisma/client';
 
+// Service for product management and database operations
+
+// Helper: Convert Product model to response DTO
 function toProductResponse(p: Product): ResponseProductDto {
   return {
     id: p.id,
@@ -25,6 +28,9 @@ function toProductResponse(p: Product): ResponseProductDto {
   };
 }
 
+// Check if insensitive search is enabled via environment variable
+
+// Helper: Build Prisma string filter for search
 // Check if insensitive search is supported
 const SUPPORTS_INSENSITIVE = process.env.INSENSITIVE_SEARCH === 'true';
 
@@ -39,6 +45,7 @@ const containsFilter = (value: string): Prisma.StringFilter<'Product'> => {
 };
 
 @Injectable()
+// Provides product CRUD operations and category retrieval
 export class ProductsService {
   // Inject Prisma service
   // eslint-disable-next-line no-unused-vars
@@ -53,7 +60,7 @@ export class ProductsService {
     return toProductResponse(p);
   }
 
-  // Get max. 12 products by searchTerm
+  // Get products by search term, category, sorting, and pagination
   async getProducts(
     searchTerm: string,
     sortBy: string = 'name',
@@ -89,7 +96,7 @@ export class ProductsService {
     return products.map(toProductResponse);
   }
 
-  // Get product categories
+  // Get all product categories
   async getCategories(): Promise<string[]> {
     const rows = await this.prisma.product.findMany({
       select: { category: true },
@@ -101,7 +108,7 @@ export class ProductsService {
       .filter((c): c is string => typeof c === 'string' && c.trim().length > 0);
   }
 
-  // Create product
+  // Create a new product
   async createProduct(data: CreateProductDto): Promise<ResponseProductDto> {
     const product = await this.prisma.product.create({
       data: {
@@ -115,7 +122,7 @@ export class ProductsService {
     return toProductResponse(product);
   }
 
-  // Update note for user
+  // Update an existing product
   async updateProduct(
     productId: string,
     data: UpdateProductDto,
@@ -130,7 +137,7 @@ export class ProductsService {
     return toProductResponse(updated);
   }
 
-  // Delete note
+  // Delete a product by productId
   async deleteProduct(productId: string): Promise<{ success: boolean }> {
     await this.prisma.product.delete({ where: { productId } });
     return { success: true };

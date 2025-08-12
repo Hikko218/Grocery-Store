@@ -15,7 +15,7 @@ export class CartService {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly prisma: PrismaService) {}
 
-  // Maps Cart entity to response DTO
+  // Helper: Convert Cart entity to response DTO
   private toResponse(cart: Cart): ResponseCartDto {
     return {
       id: cart.id,
@@ -25,7 +25,7 @@ export class CartService {
     };
   }
 
-  // Create a cart for the user; throws BadRequestException if one already exists
+  // Create a cart for the user
   async createCart(dto: CreateCartDto): Promise<ResponseCartDto> {
     const existing = await this.prisma.cart.findUnique({
       where: { userId: Number(dto.userId) },
@@ -48,7 +48,7 @@ export class CartService {
     return cart ? this.toResponse(cart) : null;
   }
 
-  // Update cart (z.B. totalPrice)
+  // Update cart (e.g. totalPrice)
   async updateCart(id: number, dto: UpdateCartDto): Promise<ResponseCartDto> {
     const updated = await this.prisma.cart.update({
       where: { id },
@@ -65,7 +65,7 @@ export class CartService {
     return this.toResponse(updated);
   }
 
-  // Delete cart
+  // Delete cart by id
   async deleteCart(id: number): Promise<{ success: boolean }> {
     const cart = await this.prisma.cart.findUnique({ where: { id } });
     if (!cart) throw new NotFoundException('Cart not found');

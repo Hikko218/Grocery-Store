@@ -1,11 +1,10 @@
-// Import the Login component
+// Home page component. Renders the hero section.
 import Hero from "@/components/Hero";
 
-// Home page component
 export default function Home() {
   return (
     <>
-      {/* Render the Login form on the home page */}
+      {/* Hero section with shop banner and featured products */}
       <Hero />
     </>
   );

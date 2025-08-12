@@ -3,6 +3,7 @@ import { OrderService } from './order.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ResponseOrderDto } from './dto/response.order.dto';
 
+// Unit tests for OrderService (order CRUD logic)
 describe('OrderService', () => {
   let service: OrderService;
   let prisma: PrismaService;
@@ -34,6 +35,7 @@ describe('OrderService', () => {
   });
 
   it('should create an order', async () => {
+    // Test order creation
     const order: ResponseOrderDto = await service.createOrder(userId);
     expect(order.id).toBeDefined();
     expect(order.userId).toBe(userId);
@@ -41,6 +43,7 @@ describe('OrderService', () => {
   });
 
   it('should list orders', async () => {
+    // Test order listing
     const orders: ResponseOrderDto[] = await service.getOrders(userId);
     expect(Array.isArray(orders)).toBe(true);
     expect(orders.length).toBeGreaterThan(0);
@@ -48,6 +51,7 @@ describe('OrderService', () => {
   });
 
   it('should update order', async () => {
+    // Test order update
     const created: ResponseOrderDto = await service.createOrder(userId);
     const updated: ResponseOrderDto = await service.updateOrder(created.id, {
       totalPrice: 200,
@@ -56,6 +60,7 @@ describe('OrderService', () => {
   });
 
   it('should delete order', async () => {
+    // Test order deletion
     const created: ResponseOrderDto = await service.createOrder(userId);
     await service.deleteOrder(created.id);
     const afterDelete: ResponseOrderDto[] = await service.getOrders(userId);

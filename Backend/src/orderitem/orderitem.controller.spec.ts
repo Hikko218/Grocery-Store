@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import * as cookieParser from 'cookie-parser';
 
+// End-to-end tests for OrderItemController API endpoints
 describe('OrderItemController', () => {
   let app: INestApplication;
   let prisma: PrismaService;

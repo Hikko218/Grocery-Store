@@ -27,7 +27,7 @@ export class CartItemController {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly service: CartItemService) {}
 
-  // POST /cartitems
+  // POST /cartitem - Create a new cart item
   @Post()
   @HttpCode(201)
   async create(@Body() dto: CreateCartItemDto): Promise<ResponseCartItemDto> {
@@ -41,7 +41,7 @@ export class CartItemController {
     }
   }
 
-  // GET /cartitems?cartId=123
+  // GET /cartitem?cartId=123 - Get all cart items for a cart
   @Get()
   @HttpCode(200)
   async findAll(
@@ -58,7 +58,7 @@ export class CartItemController {
     }
   }
 
-  // GET /cartitems/:id
+  // GET /cartitem/:id - Get a single cart item by ID
   @Get(':id')
   @HttpCode(200)
   async findOne(
@@ -75,7 +75,7 @@ export class CartItemController {
     }
   }
 
-  // PUT /cartitems/:id
+  // PUT /cartitem/:id - Update a cart item
   @Put(':id')
   @HttpCode(200)
   async update(
@@ -92,7 +92,7 @@ export class CartItemController {
     }
   }
 
-  // DELETE /cartitems/:id
+  // DELETE /cartitem/:id - Delete a cart item
   @Delete(':id')
   @HttpCode(200)
   async remove(

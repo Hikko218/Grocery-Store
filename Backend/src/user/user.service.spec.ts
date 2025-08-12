@@ -12,7 +12,8 @@ beforeAll(() => {
 describe('UsersService', () => {
   let service: UserService;
 
-  // Unit tests for UserService (user management logic)
+  // Unit tests for UserService (user CRUD logic)
+  // Setup test module and clean database before each test
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [UserService, PrismaService],
@@ -29,6 +30,7 @@ describe('UsersService', () => {
   });
 
   it('create, retrieve, delete, and update a user', async () => {
+    // Test user creation, retrieval, update, and deletion
     // Create user
     const user = await service.createUser({
       email: `test${Date.now()}@example.com`,

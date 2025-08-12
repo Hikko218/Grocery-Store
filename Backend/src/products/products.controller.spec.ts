@@ -8,6 +8,7 @@ import { AuthModule } from '../auth/auth.module';
 import * as bcrypt from 'bcrypt';
 import * as cookieParser from 'cookie-parser';
 
+// End-to-end tests for ProductsController API endpoints
 describe('ProductsController', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -15,6 +16,7 @@ describe('ProductsController', () => {
   let adminCookie: string;
 
   beforeEach(async () => {
+    // Setup test app, create admin user, and create test product
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule, AuthModule],
     }).compile();
@@ -60,7 +62,7 @@ describe('ProductsController', () => {
     productId = product.productId;
   });
 
-  // Create Product
+  // Test product creation endpoint
   it('/products (POST) should create product', async () => {
     const data = {
       productId: 'test-product-2',
@@ -80,7 +82,7 @@ describe('ProductsController', () => {
     expect(createdProduct.name).toBe('Test Product 2');
   });
 
-  // Get Products by searchTerm
+  // Test get products by search term
   it('/products (GET) should return products', async () => {
     const res = await request(app.getHttpServer())
       .get('/products')
@@ -91,7 +93,7 @@ describe('ProductsController', () => {
     expect(products.some((p) => p.productId === productId)).toBe(true);
   });
 
-  // Update Product by productId
+  // Test update product endpoint
   it('/products/:productId (PUT) should update product', async () => {
     const data = {
       name: 'Updated Product',
@@ -107,7 +109,7 @@ describe('ProductsController', () => {
     expect(updatedProduct.price).toBe(3.99);
   });
 
-  // Delete Product
+  // Test delete product endpoint
   it('/products/:productId (DELETE) should delete product', async () => {
     const res = await request(app.getHttpServer())
       .delete(`/products/${productId}`)
@@ -126,6 +128,7 @@ describe('ProductsController', () => {
   });
 
   afterAll(async () => {
+    // Close app after tests
     await app.close();
   });
 });

@@ -1,12 +1,15 @@
+// Login page. Handles user authentication and redirects after login.
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { Suspense } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Determines redirect URL after login
   const nextUrl = useMemo(() => {
     const n = searchParams?.get("next") || searchParams?.get("returnUrl");
     return n && n.startsWith("/") ? n : "/";
@@ -18,7 +21,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Wenn bereits eingeloggt, direkt weiter
+  // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
       router.replace(nextUrl);
@@ -27,6 +30,7 @@ export default function LoginPage() {
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
+  // Handles login form submission
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -40,7 +44,7 @@ export default function LoginPage() {
       });
 
       if (!res.ok) {
-        // Versuche Fehlermeldung zu lesen
+        // Try to read error message from response
         let msg = `Login failed (${res.status})`;
         try {
           const ct = res.headers.get("content-type") || "";
@@ -68,9 +72,11 @@ export default function LoginPage() {
   };
 
   return (
+    <Suspense fallback={null}>
     <div className="mx-auto min-h-[70vh] max-w-md px-4 pt-24">
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Login</h1>
 
+      {/* Login form */}
       <form
         onSubmit={onSubmit}
         className="space-y-4 rounded-md border border-slate-200 p-4"
@@ -133,5 +139,6 @@ export default function LoginPage() {
       </p>
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
     </div>
+    </Suspense>
   );
 }

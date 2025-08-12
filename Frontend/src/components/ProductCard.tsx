@@ -1,3 +1,5 @@
+// Card component for displaying a single product with image, title, price, and add-to-cart controls.
+// Supports quantity selection and optional link to product details.
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";

@@ -1,3 +1,5 @@
+// Displays detailed information for a single product, including image, description, attributes, and add-to-cart controls.
+// Supports quantity selection and navigation back to product list.
 "use client";
 
 import Image from "next/image";

@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateCartItemDto } from './dto/create.cartitem.dto';
 import { UpdateCartItemDto } from './dto/update.cartitem.dto';
 
+// Unit tests for CartItemService (cart item CRUD logic)
 describe('CartItemService', () => {
   let service: CartItemService;
   let prisma: PrismaService;
@@ -12,6 +13,7 @@ describe('CartItemService', () => {
   let cartItemId: number;
 
   beforeAll(async () => {
+    // Setup test module, clean DB, create product and cart
     const module: TestingModule = await Test.createTestingModule({
       providers: [CartItemService, PrismaService],
     }).compile();
@@ -43,6 +45,7 @@ describe('CartItemService', () => {
   });
 
   afterAll(async () => {
+    // Clean up DB after tests
     await prisma.cartItem.deleteMany({});
     await prisma.cart.deleteMany({});
     await prisma.product.deleteMany({});
@@ -50,10 +53,12 @@ describe('CartItemService', () => {
   });
 
   it('should be defined', () => {
+    // Check service is defined
     expect(service).toBeDefined();
   });
 
   it('should create, get, update, and delete a cart item', async () => {
+    // Test cart item creation, retrieval, update, and deletion
     // Create
     const createDto: CreateCartItemDto = { cartId, productId, quantity: 2 };
     const created = await service.create(createDto);

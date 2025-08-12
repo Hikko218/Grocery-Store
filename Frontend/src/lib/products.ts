@@ -1,3 +1,4 @@
+// Functions for fetching products and product details from the API
 export type Product = {
   id: number;
   productId: string;
@@ -26,6 +27,7 @@ type Params = {
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
 
+// Fetches a list of products with optional filters
 export async function fetchProducts(params: Params = {}): Promise<Product[]> {
   const qs = new URLSearchParams();
   const term = params.searchTerm?.trim();
@@ -42,7 +44,7 @@ export async function fetchProducts(params: Params = {}): Promise<Product[]> {
   return res.json() as Promise<Product[]>;
 }
 
-// Fetch a single product by productId (or numeric id)
+// Fetches a single product by productId or numeric id
 export async function fetchProductById(
   productId: string | number
 ): Promise<Product> {

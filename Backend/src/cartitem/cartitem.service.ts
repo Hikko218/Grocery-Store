@@ -12,6 +12,7 @@ export class CartItemService {
   // eslint-disable-next-line no-unused-vars
   constructor(private readonly prisma: PrismaService) {}
 
+  // Helper: Convert CartItem model to response DTO
   private toResponse(item: CartItem): ResponseCartItemDto {
     return {
       id: item.id,
@@ -22,7 +23,7 @@ export class CartItemService {
     };
   }
 
-  // Create a new cart item and transform DB entity to response DTO
+  // Create a new cart item
   async create(dto: CreateCartItemDto): Promise<ResponseCartItemDto> {
     const item = await this.prisma.cartItem.create({
       data: {
@@ -42,14 +43,14 @@ export class CartItemService {
     return items.map((item) => this.toResponse(item));
   }
 
-  // Find a single cart item by primary key or throw 404
+  // Find a single cart item by ID
   async findOne(id: number): Promise<ResponseCartItemDto> {
     const item = await this.prisma.cartItem.findUnique({ where: { id } });
     if (!item) throw new NotFoundException('CartItem not found');
     return this.toResponse(item);
   }
 
-  // Update a cart item partially and return the transformed DTO
+  // Update a cart item
   async update(
     id: number,
     dto: UpdateCartItemDto,
@@ -63,7 +64,7 @@ export class CartItemService {
     return this.toResponse(item);
   }
 
-  // Delete a cart item and return a simple success flag
+  // Delete a cart item
   async remove(id: number): Promise<{ success: boolean }> {
     await this.prisma.cartItem.delete({ where: { id } });
     return { success: true };

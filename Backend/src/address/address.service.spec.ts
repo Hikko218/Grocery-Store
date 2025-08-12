@@ -44,6 +44,7 @@ describe('AddressService', () => {
     expect(service).toBeDefined();
   });
 
+  // Test findAllByUser returns addresses
   it('findAllByUser returns list', async () => {
     const spy = jest.spyOn(prismaAddress, 'findMany');
     await service.findAllByUser(1);
