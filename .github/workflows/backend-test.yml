@@ -30,3 +30,4 @@ jobs:
         run: npm run test:ci
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
