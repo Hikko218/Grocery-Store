@@ -6,22 +6,37 @@ import {
   Delete,
   Body,
   Param,
-  Query,
   ParseIntPipe,
   HttpCode,
   BadRequestException,
-  NotFoundException,
   Logger,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create.order.dto';
 import { UpdateOrderDto } from './dto/update.order.dto';
 import { ResponseOrderDto } from './dto/response.order.dto';
+import { AuthGuard } from '@nestjs/passport';
+import type { Request } from 'express';
+import { PrismaService } from '../prisma/prisma.service';
 
+type AuthReq = Request & {
+  user?: { id?: number; userId?: number; sub?: number };
+};
+function getUserId(req: AuthReq) {
+  return Number(req.user?.id ?? req.user?.userId ?? req.user?.sub);
+}
+
+@UseGuards(AuthGuard('jwt'))
 @Controller('order')
 export class OrderController {
-  // eslint-disable-next-line no-unused-vars
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    // eslint-disable-next-line no-unused-vars
+    private readonly orderService: OrderService,
+    // eslint-disable-next-line no-unused-vars
+    private readonly prisma: PrismaService,
+  ) {}
 
   // POST /order
   @Post()
@@ -40,23 +55,38 @@ export class OrderController {
     }
   }
 
-  // GET /order?userId=123
-  @Get()
+  // GET /order/me
+  @Get('me')
   @HttpCode(200)
-  async find(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<ResponseOrderDto[]> {
-    try {
-      const orders = await this.orderService.findByUser(userId);
-      Logger.log(`Fetched ${orders.length} orders for user ${userId}`);
-      return orders;
-    } catch (err) {
-      Logger.error(
-        `Error fetching orders for user ${userId}`,
-        err instanceof Error ? err.stack : undefined,
-      );
-      throw new NotFoundException('Cant get orders');
-    }
+  async listMy(@Req() req: AuthReq) {
+    const userId = getUserId(req);
+    const orders = await this.prisma.order.findMany({
+      where: { userId },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: { id: true, name: true, price: true, imageUrl: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Map auf ein kompaktes DTO mit status + Produktinfos
+    return orders.map((o) => ({
+      id: o.id,
+      createdAt: o.createdAt,
+      status: o.paymentStatus, // vereinheitlicht
+      totalPrice: o.totalPrice,
+      items: o.items.map((it) => ({
+        id: it.id,
+        quantity: it.quantity,
+        price: it.price,
+        product: it.product,
+      })),
+    }));
   }
 
   // PUT /order/:orderId

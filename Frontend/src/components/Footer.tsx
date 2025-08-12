@@ -111,18 +111,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/categories" className="hover:text-white">
-                  Categories
-                </Link>
-              </li>
-              <li>
-                <Link href="/deals" className="hover:text-white">
+                <Link href="/" className="hover:text-white">
                   Deals & offers
-                </Link>
-              </li>
-              <li>
-                <Link href="/new" className="hover:text-white">
-                  New arrivals
                 </Link>
               </li>
             </ul>
@@ -135,22 +125,22 @@ export default function Footer() {
             </h3>
             <ul className="mt-3 space-y-2 text-sm text-slate-300/90">
               <li>
-                <Link href="/support" className="hover:text-white">
+                <Link href="/" replace prefetch={false} className="hover:text-white">
                   Customer support
                 </Link>
               </li>
               <li>
-                <Link href="/shipping-returns" className="hover:text-white">
+                <Link href="/" replace prefetch={false} className="hover:text-white">
                   Shipping & returns
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="hover:text-white">
+                <Link href="/" replace prefetch={false} className="hover:text-white">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/order-tracking" className="hover:text-white">
+                <Link href="/" replace prefetch={false} className="hover:text-white">
                   Order tracking
                 </Link>
               </li>
@@ -178,7 +168,7 @@ export default function Footer() {
                 className="w-full rounded-md border border-white/10 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-emerald-400/60"
               />
               <button
-                type="submit"
+                type="button"
                 className="whitespace-nowrap rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400"
               >
                 Subscribe
@@ -186,7 +176,7 @@ export default function Footer() {
             </form>
             <p className="mt-2 text-xs text-slate-400">
               By subscribing you agree to our{" "}
-              <Link href="/privacy" className="underline hover:text-white">
+              <Link href="/" replace prefetch={false} className="underline hover:text-white">
                 Privacy Policy
               </Link>
               .
@@ -218,19 +208,19 @@ export default function Footer() {
 
           {/* Legal links */}
           <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-300/90">
-            <Link href="/imprint" className="hover:text-white">
+            <Link href="/" replace prefetch={false} className="hover:text-white">
               Imprint
             </Link>
-            <Link href="/privacy" className="hover:text-white">
+            <Link href="/" replace prefetch={false} className="hover:text-white">
               Privacy
             </Link>
-            <Link href="/terms" className="hover:text-white">
+            <Link href="/" replace prefetch={false} className="hover:text-white">
               Terms
             </Link>
-            <Link href="/cookies" className="hover:text-white">
+            <Link href="/" replace prefetch={false} className="hover:text-white">
               Cookies
             </Link>
-            <Link href="/contact" className="hover:text-white">
+            <Link href="/" replace prefetch={false} className="hover:text-white">
               Contact
             </Link>
           </nav>

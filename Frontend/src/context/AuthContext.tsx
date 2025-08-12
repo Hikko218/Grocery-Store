@@ -14,6 +14,7 @@ export type User = {
   id: number;
   email: string;
   name?: string | null;
+  role?: string | null; // "user" | "admin"
 };
 
 type AuthContextValue = {
@@ -42,8 +43,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         return;
       }
-      const data = (await res.json()) as User;
-      setUser(data ?? null);
+      const data = (await res.json()) as unknown;
+      // Unterstützt mehrere Formen: {isAuthenticated,user:{...}} oder {isAuthenticated,userId,email,role} oder direkt {id,email,role}
+      let next: User | null = null;
+      if (data && typeof data === "object") {
+        const d = data as Record<string, unknown>;
+        if (
+          d.isAuthenticated === true &&
+          typeof d.user === "object" &&
+          d.user
+        ) {
+          const u = d.user as {
+            id?: number;
+            email?: string;
+            role?: string | null;
+          };
+          if (typeof u.id === "number" && typeof u.email === "string") {
+            next = {
+              id: u.id,
+              email: u.email,
+              role: (u.role ?? null)?.toString().toLowerCase() ?? null,
+            };
+          }
+        } else if (d.isAuthenticated === true && typeof d.userId === "number") {
+          next = {
+            id: d.userId as number,
+            email: String(d.email ?? ""),
+            role: (d.role ?? null)?.toString().toLowerCase() ?? null,
+          };
+        } else if (typeof d.id === "number" && typeof d.email === "string") {
+          next = {
+            id: d.id as number,
+            email: d.email as string,
+            role: (d.role ?? null)?.toString().toLowerCase() ?? null,
+          };
+        }
+      }
+      setUser(next);
     } catch {
       setUser(null);
     }

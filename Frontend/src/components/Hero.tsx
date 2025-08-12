@@ -31,7 +31,7 @@ export default function Hero() {
         <div className="mt-7 flex justify-center">
           <Link
             href="/products"
-            className="inline-flex items-center rounded-md bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50"
+            className="inline-flex items-center rounded-md bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50"
             aria-label="Jetzt einkaufen"
           >
             Shop now

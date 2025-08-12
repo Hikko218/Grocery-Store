@@ -40,6 +40,7 @@ describe('UserController (e2e)', () => {
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: userEmail, password: 'secret' });
+
     userCookie = loginRes.headers['set-cookie']?.[0];
   });
 

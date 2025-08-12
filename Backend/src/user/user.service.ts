@@ -3,10 +3,67 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create.user.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
 import { ResponseUserDto } from './dto/response.user.dto';
-import { User as UserModel } from '@prisma/client';
+import { User as UserModel, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
-function toUserResponse(u: UserModel): ResponseUserDto {
+type OrderItemResponse = {
+  id: number;
+  quantity: number;
+  price: number;
+  product?: {
+    id: number;
+    name: string;
+    price: number;
+    imageUrl?: string | null;
+  } | null;
+};
+type OrderResponse = {
+  id: number;
+  userId: number;
+  createdAt: string;
+  paymentStatus: string;
+  totalPrice: number;
+  items: OrderItemResponse[];
+};
+
+type IncludedOrder = Prisma.OrderGetPayload<{
+  include: { items: { include: { product: true } } };
+}>;
+
+function iso(d: Date | string): string {
+  return d instanceof Date
+    ? d.toISOString()
+    : new Date(String(d)).toISOString();
+}
+
+function toOrderResponse(o: IncludedOrder): OrderResponse {
+  return {
+    id: o.id,
+    userId: o.userId,
+    createdAt: iso(o.createdAt),
+    paymentStatus: String(o.paymentStatus),
+    totalPrice: Number(o.totalPrice ?? 0),
+    items: (o.items ?? []).map((it) => ({
+      id: it.id,
+      quantity: it.quantity,
+      // Prisma.Decimal -> number
+      price: Number(it.price ?? 0),
+      product: it.product
+        ? {
+            id: it.product.id,
+            name: it.product.name,
+            price: Number(it.product.price ?? 0),
+            imageUrl: it.product.imageUrl ?? null,
+          }
+        : null,
+    })),
+  };
+}
+
+function toUserResponse(
+  u: UserModel,
+  orders?: OrderResponse[],
+): ResponseUserDto & { orders?: OrderResponse[] } {
   const createdAt =
     u.createdAt instanceof Date
       ? u.createdAt.toISOString()
@@ -15,10 +72,12 @@ function toUserResponse(u: UserModel): ResponseUserDto {
   return {
     id: u.id,
     email: String(u.email),
-    name: u.name != null ? String(u.name) : null,
+    firstName: u.firstName != null ? String(u.firstName) : null,
+    lastName: u.lastName != null ? String(u.lastName) : null,
     phone: u.phone != null ? String(u.phone) : null,
     role: String(u.role),
     createdAt,
+    ...(orders ? { orders } : {}),
   };
 }
 
@@ -34,7 +93,8 @@ export class UserService {
       data: {
         email: data.email,
         password: hashedPassword,
-        name: data.name ?? null,
+        firstName: data.firstName ?? undefined,
+        lastName: data.lastName ?? undefined,
         phone: data.phone ?? null,
         role: data.role ?? 'user',
       },
@@ -42,14 +102,50 @@ export class UserService {
     return toUserResponse(user);
   }
 
-  // Get user by email
-  async getUserbyEmail(email: string): Promise<ResponseUserDto | null> {
+  // Get user by email (optional: include orders)
+  async getUserbyEmail(
+    email: string,
+    opts?: { includeOrders?: boolean },
+  ): Promise<(ResponseUserDto & { orders?: OrderResponse[] }) | null> {
+    if (opts?.includeOrders) {
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+        include: {
+          orders: {
+            include: { items: { include: { product: true } } },
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+      });
+      if (!user) return null;
+      const orders = user.orders.map((o) => toOrderResponse(o));
+      return toUserResponse(user, orders);
+    }
+
     const user = await this.prisma.user.findUnique({ where: { email } });
     return user ? toUserResponse(user) : null;
   }
 
-  // Get user by id
-  async findById(id: number): Promise<ResponseUserDto> {
+  // Get user by id (optional: include orders)
+  async findById(
+    id: number,
+    opts?: { includeOrders?: boolean },
+  ): Promise<ResponseUserDto & { orders?: OrderResponse[] }> {
+    if (opts?.includeOrders) {
+      const user = await this.prisma.user.findUnique({
+        where: { id },
+        include: {
+          orders: {
+            include: { items: { include: { product: true } } },
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+      });
+      if (!user) throw new NotFoundException('User not found');
+      const orders = user.orders.map((o) => toOrderResponse(o));
+      return toUserResponse(user, orders);
+    }
+
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
     return toUserResponse(user);
@@ -69,7 +165,8 @@ export class UserService {
       data: {
         email: data.email ?? undefined,
         password,
-        name: data.name ?? undefined,
+        firstName: data.firstName ?? undefined,
+        lastName: data.lastName ?? undefined,
         phone: data.phone ?? undefined,
         role: data.role ?? undefined,
       },

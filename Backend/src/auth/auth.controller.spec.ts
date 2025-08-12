@@ -83,7 +83,7 @@ describe('AuthController', () => {
     // Should return authenticated user status
     it('should return user status with authentication info', () => {
       // Mock user
-      const mockUser = { userId: 1, email: 'test@mail.com' };
+      const mockUser = { userId: 1, email: 'test@mail.com', role: 'user' };
       // Mock req in res
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       (res as any).req = { user: mockUser };
@@ -93,6 +93,7 @@ describe('AuthController', () => {
         isAuthenticated: true,
         userId: 1,
         email: 'test@mail.com',
+        role: 'user',
       });
     });
 
@@ -106,6 +107,7 @@ describe('AuthController', () => {
         isAuthenticated: false,
         userId: null,
         email: null,
+        role: null,
       });
     });
   });

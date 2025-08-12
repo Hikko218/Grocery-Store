@@ -78,9 +78,9 @@ export default function ProductsBanner(props: {
   const resultsCount = products.length;
 
   return (
-    <section className="w-full bg-white/70">
+    <section className="w-full bg-[#AAB7BF]">
       <div className="mx-auto max-w-7xl px-4 py-10">
-        <div className="mb-6 flex items-end justify-between">
+        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">
               {searchTerm ? `Search results for “${searchTerm}”` : title}
@@ -96,7 +96,7 @@ export default function ProductsBanner(props: {
           {!searchTerm && (
             <Link
               href="/products"
-              className="text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+              className="mt-2 self-start text-sm font-semibold text-emerald-700 hover:text-emerald-800 sm:mt-0"
             >
               View all →
             </Link>
@@ -110,9 +110,8 @@ export default function ProductsBanner(props: {
         {resultsCount === 0 && !loading && (
           <div className="text-sm text-slate-600">No products found.</div>
         )}
-
         {resultsCount > 0 && (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {products.map((p) => (
               <ProductCard
                 key={p.productId}

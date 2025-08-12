@@ -19,6 +19,7 @@ interface LoginBody {
 interface User {
   userId: number;
   email: string;
+  role: string;
 }
 
 interface AuthenticatedRequest extends Request {
@@ -52,6 +53,7 @@ export class AuthController {
       isAuthenticated: !!user,
       userId: user?.userId ?? null,
       email: user?.email ?? null,
+      role: user?.role ?? null,
     });
   }
 

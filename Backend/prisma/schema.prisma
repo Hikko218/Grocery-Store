@@ -12,6 +12,15 @@ enum AddressType {
   BILLING
 }
 
+enum PaymentStatus {
+  REQUIRES_PAYMENT_METHOD
+  REQUIRES_ACTION
+  PROCESSING
+  SUCCEEDED
+  CANCELED
+  FAILED
+}
+
 model Address {
   id         Int         @id @default(autoincrement())
   userId     Int
@@ -31,16 +40,18 @@ model Address {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?            
-  phone     String?
-  createdAt DateTime @default(now())
-  role      String   @default("user")
-  cart      Cart?
-  orders    Order[]
-  addresses Address[] 
+  id                Int      @id @default(autoincrement())
+  email             String   @unique
+  password          String
+  firstName         String?
+  lastName          String?            
+  phone             String?
+  createdAt         DateTime @default(now())
+  role              String   @default("user")
+  cart              Cart?
+  orders            Order[]
+  addresses         Address[] 
+  stripeCustomerId  String?  @unique
 }
 
 model Product {
@@ -67,19 +78,29 @@ model Product {
 }
 
 model Order {
-  id                  Int         @id @default(autoincrement())
-  userId              Int
-  totalPrice          Decimal     @db.Decimal(12, 2)
-  createdAt           DateTime    @default(now())
-  shippingName        String
-  shippingStreet      String
-  shippingStreet2     String?
-  shippingPostalCode  String
-  shippingCity        String
-  shippingCountry     String
-  shippingPhone       String?
-  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items               OrderItem[]
+  id                    Int         @id @default(autoincrement())
+  userId                Int
+  totalPrice            Decimal     @db.Decimal(12, 2)
+  createdAt             DateTime    @default(now())
+  shippingName          String
+  shippingStreet        String
+  shippingStreet2       String?
+  shippingPostalCode    String
+  shippingCity          String
+  shippingCountry       String
+  shippingPhone         String?
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items                 OrderItem[]
+  paymentProvider       String         @default("stripe")
+  paymentStatus         PaymentStatus  @default(REQUIRES_PAYMENT_METHOD)
+  stripePaymentIntentId String?        @unique
+  stripePaymentMethodId String?
+  stripeChargeId        String?
+  stripeReceiptUrl      String?
+  cardBrand             String?
+  cardLast4             String?
+  paidAt                DateTime?
+  paymentData           Json?
 
   @@index([userId, createdAt])
 }

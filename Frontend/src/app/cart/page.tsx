@@ -3,15 +3,49 @@
 import { useCart } from "@/context/CartContext";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function CartPage() {
   const { items, setQuantity, removeItem, clear, total } = useCart();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const inc = (id: string, qty: number) => setQuantity(id, qty + 1);
-  const dec = (id: string, qty: number) => setQuantity(id, qty - 1);
+  const dec = (id: string, qty: number) =>
+    setQuantity(id, Math.max(1, qty - 1));
+
+  const handleCheckout = async () => {
+    if (items.length === 0 || loading) return;
+    setLoading(true);
+    try {
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+      // geschützte Route testen (Cookie wird mitgesendet)
+      const res = await fetch(`${API_URL}/order/me`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (res.status === 401 || res.status === 403) {
+        router.push(`/login?next=/checkout`);
+        return;
+      }
+      if (!res.ok) {
+        // Fallback: zur Login-Seite
+        router.push(`/login?next=/checkout`);
+        return;
+      }
+      // eingeloggt -> weiter zum Checkout
+      router.push("/checkout");
+    } catch {
+      router.push(`/login?next=/checkout`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <main className="mx-auto max-w-5xl px-4 pt-24">
+    <div className="mx-auto min-h-[70vh] max-w-5xl px-4 pt-24">
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Your Cart</h1>
 
       {items.length === 0 ? (
@@ -88,8 +122,12 @@ export default function CartPage() {
             <p className="mb-4 text-xs text-slate-500">
               Taxes and shipping calculated at checkout.
             </p>
-            <button className="mb-2 w-full rounded-md bg-emerald-500 px-4 py-2 font-semibold text-white hover:bg-emerald-600">
-              Checkout
+            <button
+              className="mb-2 w-full rounded-md bg-emerald-500 px-4 py-2 font-semibold text-white hover:bg-emerald-600 disabled:opacity-60"
+              onClick={handleCheckout}
+              disabled={items.length === 0 || loading}
+            >
+              {loading ? "Checking..." : "Checkout"}
             </button>
             <button
               className="w-full rounded-md border px-4 py-2 text-slate-700 hover:bg-red-500"
@@ -100,6 +138,6 @@ export default function CartPage() {
           </aside>
         </div>
       )}
-    </main>
+    </div>
   );
 }

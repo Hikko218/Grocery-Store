@@ -8,12 +8,13 @@ export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextUrl = useMemo(() => {
-    const n = searchParams?.get("next");
+    const n = searchParams?.get("next") || searchParams?.get("returnUrl");
     return n && n.startsWith("/") ? n : "/";
   }, [searchParams]);
 
   const { user, loading: authLoading, refresh } = useAuth();
-  const [name, setName] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirm, setConfirm] = useState<string>("");
@@ -27,6 +28,7 @@ export default function RegisterPage() {
   }, [authLoading, user, nextUrl, router]);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+  const AUTH_LOGIN_URL = `${API_BASE}/auth/login`;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +43,12 @@ export default function RegisterPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name || undefined, email, password }),
+        body: JSON.stringify({
+          firstName: firstName || undefined,
+          lastName: lastName || undefined,
+          email,
+          password,
+        }),
       });
 
       if (!res.ok) {
@@ -60,6 +67,31 @@ export default function RegisterPage() {
         throw new Error(msg);
       }
 
+      // Direkt nach Registrierung einloggen
+      const loginRes = await fetch(AUTH_LOGIN_URL, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!loginRes.ok) {
+        // Wenn Login fehlschlägt, Fehler anzeigen statt still weiterzuleiten
+        let msg = `Login after register failed (${loginRes.status})`;
+        try {
+          const ct = loginRes.headers.get("content-type") || "";
+          if (ct.includes("application/json")) {
+            const data = (await loginRes.json()) as {
+              message?: string | string[];
+            };
+            if (Array.isArray(data.message)) msg = data.message.join(", ");
+            else if (typeof data.message === "string") msg = data.message;
+          } else {
+            const text = await loginRes.text();
+            if (text) msg = text.slice(0, 200);
+          }
+        } catch {}
+        throw new Error(msg);
+      }
       await refresh();
       router.replace(nextUrl);
     } catch (err: unknown) {
@@ -70,7 +102,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-24">
+    <div className="mx-auto max-w-md px-4 pt-24">
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Register</h1>
 
       <form
@@ -79,19 +111,37 @@ export default function RegisterPage() {
       >
         <div>
           <label
-            htmlFor="name"
+            htmlFor="firstName"
             className="block text-sm font-medium text-slate-700"
           >
-            Name (optional)
+            First name (optional)
           </label>
           <input
-            id="name"
+            id="firstName"
             type="text"
-            autoComplete="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            autoComplete="given-name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="Your name"
+            placeholder="First name"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="lastName"
+            className="block text-sm font-medium text-slate-700"
+          >
+            Last name (optional)
+          </label>
+          <input
+            id="lastName"
+            type="text"
+            autoComplete="family-name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            placeholder="Last name"
           />
         </div>
 
@@ -169,10 +219,13 @@ export default function RegisterPage() {
 
       <p className="mt-4 text-center text-sm text-slate-600">
         Already have an account?{" "}
-        <a href="/login" className="text-emerald-600 hover:underline">
+        <a
+          href={`/login?next=${encodeURIComponent(nextUrl)}`}
+          className="text-emerald-600 hover:underline"
+        >
           Login
         </a>
       </p>
-    </main>
+    </div>
   );
 }

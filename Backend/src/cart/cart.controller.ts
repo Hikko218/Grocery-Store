@@ -13,17 +13,31 @@ import {
   Query,
   UseGuards,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import type { Request } from 'express';
 import { CartService } from './cart.service';
 import { UpdateCartDto } from './dto/update.cart.dto';
 import { ResponseCartDto } from './dto/response.cart.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { PrismaService } from '../prisma/prisma.service';
+
+type AuthReq = Request & {
+  user?: { id?: number; userId?: number; sub?: number };
+};
+function getUserId(req: AuthReq) {
+  return Number(req.user?.id ?? req.user?.userId ?? req.user?.sub);
+}
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('cart')
 export class CartController {
-  // eslint-disable-next-line no-unused-vars
-  constructor(private readonly cartService: CartService) {}
+  constructor(
+    // eslint-disable-next-line no-unused-vars
+    private readonly cartService: CartService,
+    // eslint-disable-next-line no-unused-vars
+    private readonly prisma: PrismaService,
+  ) {}
 
   // GET /cart?userId=1
   @Get()
@@ -106,5 +120,20 @@ export class CartController {
       Logger.error(`Error deleting cart ${cartId}: ${error}`);
       throw new BadRequestException('Cannot delete cart');
     }
+  }
+
+  @Post('clear')
+  @HttpCode(200)
+  async clear(@Req() req: AuthReq) {
+    const userId = getUserId(req);
+    if (!Number.isFinite(userId)) return { cleared: false };
+    const cart = await this.prisma.cart.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (cart) {
+      await this.prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+    }
+    return { cleared: true };
   }
 }

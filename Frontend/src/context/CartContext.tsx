@@ -17,6 +17,7 @@ import {
   clearServerCartItems,
   addCartItems, // hinzugefügt
 } from "@/lib/cartitems";
+import { usePathname } from "next/navigation";
 
 export type CartItem = {
   productId: string;
@@ -60,15 +61,20 @@ function loadInitial(): CartItem[] {
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   const [items, setItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const migratedRef = useRef(false); // verhindert Doppel-Ausführung im StrictMode
 
   useEffect(() => {
+    // Skip auto-load on profile; keeps header from fetching cart there.
+    if (pathname === "/profile") return;
+
     const initial = loadInitial();
     setItems(initial);
     setLoaded(true);
-  }, []);
+  }, [pathname]);
 
   // Items in LocalStorage persistieren
   useEffect(() => {

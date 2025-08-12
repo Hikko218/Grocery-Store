@@ -23,14 +23,14 @@ export default async function ProductsPage({
     | "desc";
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pt-24">
-      <h1 className="mb-4 text-2xl font-bold text-slate-900">Products</h1>
+    <div className="mx-auto max-w-7xl pt-24">
+      <h1 className="ml-4 text-3xl font-bold text-slate-900">Products</h1>
       <ProductsBanner
         searchTerm={searchTerm}
         category={category || undefined} // NEW
         sortBy={sortBy}
         sortOrder={sortOrder}
       />
-    </main>
+    </div>
   );
 }

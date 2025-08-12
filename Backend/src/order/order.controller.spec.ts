@@ -16,6 +16,7 @@ describe('OrderController (e2e)', () => {
   let userId: number;
   let orderId: number;
   let adminCookie: string;
+  let userCookie: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -60,6 +61,13 @@ describe('OrderController (e2e)', () => {
     });
     userId = user.id;
 
+    // User-Login für /order/me
+    const userLoginRes = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: user.email, password: 'pw' });
+    userCookie = userLoginRes.headers['set-cookie']?.[0];
+    expect(userCookie).toBeDefined();
+
     // Create a cart for the user with totalPrice 100
     await prisma.cart.create({
       data: {
@@ -98,13 +106,15 @@ describe('OrderController (e2e)', () => {
 
     // Get
     const getRes = await request(app.getHttpServer())
-      .get(`/order?userId=${userId}`)
-      .set('Cookie', adminCookie)
+      .get('/order/me')
+      .set('Cookie', userCookie)
       .expect(200);
     const getResBody = getRes.body as ResponseOrderDto[];
     expect(Array.isArray(getResBody)).toBe(true);
     expect(getResBody.length).toBeGreaterThan(0);
-    expect(getResBody[0].userId).toBe(userId);
+    // Controller-DTO enthält keine userId: Form/Struktur prüfen
+    expect(typeof getResBody[0].id).toBe('number');
+    expect(getResBody[0]).toHaveProperty('items');
 
     // Update
     const updateRes = await request(app.getHttpServer())
@@ -126,8 +136,8 @@ describe('OrderController (e2e)', () => {
 
     // Check if deleted
     const afterDeleteRes = await request(app.getHttpServer())
-      .get(`/order?userId=${userId}`)
-      .set('Cookie', adminCookie)
+      .get('/order/me')
+      .set('Cookie', userCookie)
       .expect(200);
     const afterDeleteResBody = afterDeleteRes.body as ResponseOrderDto[];
     expect(afterDeleteResBody.find((o) => o.id === orderId)).toBeUndefined();

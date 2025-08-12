@@ -4,9 +4,12 @@ import * as cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import type { Express } from 'express';
 import { Logger } from '@nestjs/common';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
+  app.use('/webhook/stripe', bodyParser.raw({ type: 'application/json' }));
+
   const expressApp = app.getHttpAdapter().getInstance() as Express;
   expressApp.set('trust proxy', 1);
 

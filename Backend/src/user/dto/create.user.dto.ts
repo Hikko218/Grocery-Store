@@ -9,7 +9,11 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsString()
-  name?: string;
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  lastName?: string;
 
   @IsOptional()
   @IsPhoneNumber(undefined, { message: 'phone must be a valid phone number' })

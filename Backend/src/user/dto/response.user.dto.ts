@@ -9,7 +9,10 @@ export class ResponseUserDto {
   email!: string;
 
   @Expose()
-  name?: string | null;
+  firstName?: string | null;
+
+  @Expose()
+  lastName?: string | null;
 
   @Expose()
   phone?: string | null;

@@ -1,15 +1,14 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextUrl = useMemo(() => {
-    const n = searchParams?.get("next");
+    const n = searchParams?.get("next") || searchParams?.get("returnUrl");
     return n && n.startsWith("/") ? n : "/";
   }, [searchParams]);
 
@@ -69,7 +68,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-24">
+    <div className="mx-auto min-h-[70vh] max-w-md px-4 pt-24">
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Login</h1>
 
       <form
@@ -114,12 +113,6 @@ export default function LoginPage() {
           />
         </div>
 
-        {error && (
-          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
         <button
           type="submit"
           disabled={submitting}
@@ -130,11 +123,15 @@ export default function LoginPage() {
       </form>
 
       <p className="mt-4 text-center text-sm text-slate-600">
-        Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-emerald-600 hover:underline">
+        No account?{" "}
+        <a
+          href={`/register?next=${encodeURIComponent(nextUrl)}`}
+          className="text-emerald-600 hover:underline"
+        >
           Register
-        </Link>
+        </a>
       </p>
-    </main>
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+    </div>
   );
 }

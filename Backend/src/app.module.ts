@@ -11,6 +11,7 @@ import { CartModule } from './cart/cart.module';
 import { CartItemModule } from './cartitem/cartitem.module';
 import { AuthModule } from './auth/auth.module';
 import { AddressModule } from './address/address.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AddressModule } from './address/address.module';
     CartItemModule,
     AuthModule,
     AddressModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
