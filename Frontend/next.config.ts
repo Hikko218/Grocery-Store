@@ -8,16 +8,15 @@ const nextConfig: NextConfig = {
         destination:
           process.env.NODE_ENV === "development"
             ? "http://localhost:3000/:path*"
-            : "https://notes-web-app-q32v.onrender.com/:path*",
+            : "https://grocery-store-5kvq.onrender.com/:path*",
       },
     ];
   },
   images: {
     remotePatterns: [
       {
-        protocol: "http",
-        hostname: "localhost",
-        port: "3000",
+        protocol: "https",
+        hostname: "grocery-store-5kvq.onrender.com",
         pathname: "/uploads/**",
       },
       {
