@@ -25,11 +25,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Grocery Store",
     description: "Built with Next.js, Tailwind, TypeScript, shadcn/ui",
-    url: "https://notes-web-app-tan.vercel.app",
+    url: "https://grocery-store-ckfe-6ed1hdjn4-heiko-ries-projects.vercel.app",
     siteName: "Grocery Store",
     images: [
       {
-        url: "https://notes-web-app-tan.vercel.app/Grocery_Store_Titel_Picture.png",
+        url: "https://grocery-store-ckfe-6ed1hdjn4-heiko-ries-projects.vercel.app/Grocery_Store_Titel_Picture.png",
         width: 1200,
         height: 630,
         alt: "Grocery Store Preview",

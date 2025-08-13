@@ -23,7 +23,11 @@ async function bootstrap() {
 
   app.use(cookieParser());
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://grocery-store-ckfe-6ed1hdjn4-heiko-ries-projects.vercel.app',
+    ],
     credentials: true,
   });
 
